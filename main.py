@@ -7,11 +7,12 @@ app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 
 @app.route('/')
 def hello():
-    return 'Hello Misha'
+    return 'Hello go Misha'
 
 
 def main():
-    app.run()
+    db_session.global_init("db/couriers.db")
+    app.run(host='0.0.0.0', port=8000)
 
 
 if __name__ == '__main__':
