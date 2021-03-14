@@ -1,1 +1,1 @@
-from data import orders, couriers, regions, workinghours, deliveryhours
+from data import regions, workinghours, deliveryhours, orders, couriers
