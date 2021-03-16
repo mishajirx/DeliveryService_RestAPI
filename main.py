@@ -7,7 +7,7 @@ x = 0
 
 
 @app.errorhandler(400)
-def not_found(error):
+def bad_request(error, *args):
     return make_response(jsonify({'error': 'Bad Request'}), 400)
 
 

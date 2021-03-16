@@ -7,6 +7,7 @@ from data.orders import Order
 from data.regions import Region
 from data.workinghours import WH
 from data.deliveryhours import DH
+from main import bad_request
 
 blueprint = Blueprint(
     'shop_api',
@@ -25,9 +26,11 @@ def add_couriers():
     bad_id = []
     is_ok = True
     for courier_info in req_json:
+        print(set(dict(courier_info).keys()))
         if set(dict(courier_info).keys()) != fields:
+            print('No')
             is_ok = False
-            bad_id.append(int(courier_info['courier_id']))
+            bad_id.append({"id": int(courier_info['courier_id'])})
             continue
         courier = Courier()
         courier.id = int(courier_info['courier_id'])
@@ -48,7 +51,7 @@ def add_couriers():
 
     if is_ok:
         return jsonify({"couriers": res}), 201
-    abort(400)
+    return jsonify({"validation_error": bad_id}), 400
 
 
 @blueprint.route('/couriers/<courier_id>', methods=["PATCH"])
@@ -65,7 +68,7 @@ def edit_courier(courier_id):
     if is_ok:
         return jsonify('Информация о клиенте'), 201
     else:
-        abort(400)
+        bad_request(404, 'ahahahha', 'hffhhfhf')
 
 
 @blueprint.route('/test', methods=['GET'])
