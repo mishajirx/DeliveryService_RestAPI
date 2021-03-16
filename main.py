@@ -1,5 +1,5 @@
 from flask import Flask, make_response, jsonify, abort, request
-from data import db_session, courier_api, orders_api
+from data import db_session, shop_api
 from data.couriers import Courier
 from data.orders import Order
 
@@ -25,8 +25,7 @@ def hello():
 
 def main():
     db_session.global_init("db/couriers.db")
-    app.register_blueprint(courier_api.blueprint)
-    app.register_blueprint(orders_api.blueprint)
+    app.register_blueprint(shop_api.blueprint)
     app.run(host='0.0.0.0', port=8080)
 
 

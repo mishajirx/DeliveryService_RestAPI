@@ -2,7 +2,7 @@ import sqlalchemy
 from data.db_session import SqlAlchemyBase
 
 
-class Courier(SqlAlchemyBase):
+class DH(SqlAlchemyBase):
     __tablename__ = 'deliveryhours'
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)

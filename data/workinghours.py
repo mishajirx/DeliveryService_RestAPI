@@ -1,8 +1,8 @@
 import sqlalchemy
-from .db_session import SqlAlchemyBase
+from data.db_session import SqlAlchemyBase
 
 
-class Courier(SqlAlchemyBase):
+class WH(SqlAlchemyBase):
     __tablename__ = 'workinghours'
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)

@@ -6,7 +6,7 @@ from data.couriers import Courier
 from data.orders import Order
 
 blueprint = flask.Blueprint(
-    'courier_api',
+    'shop_api',
     __name__,
     template_folder='templates'
 )
