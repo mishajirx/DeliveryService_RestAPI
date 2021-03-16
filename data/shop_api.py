@@ -1,3 +1,5 @@
+import datetime
+
 import flask
 from flask import jsonify, abort, request, Blueprint
 from sqlite3 import connect
@@ -18,6 +20,25 @@ courier_fields = {'courier_id', 'courier_type', 'regions', 'working_hours'}
 order_fields = {'order_id', 'weight', 'region', 'delivery_hours'}
 c_type = {'foot': 10, 'bike': 15, 'car': 50}
 rev_c_type = {10: 'foot', 15: 'bike', 50: 'car'}
+
+
+def is_t_ok(l1, l2) -> bool:
+    # format HH:MM - HH:MM
+    time = [0] * 1440
+    for t in list(l1) + list(l2):
+        b1, b2 = t.split(' - ')
+        a = b1.split(':')
+        a = int(a[0]) * 60 + int(a[1])
+        b = b2.split(':')
+        b = int(b[0]) * 60 + int(b[1])
+        time[a] += 1
+        time[b + 1] -= 1
+    balance = 0
+    for i in time:
+        balance += i
+        if balance >= 2:
+            return True
+    return False
 
 
 @blueprint.route('/couriers', methods=["POST"])
@@ -114,16 +135,9 @@ def edit_courier(courier_id):
                 wh.hours = i
                 db_sess.add(wh)
     db_sess.commit()
-    # con = connect('db/couriers.db')
-    # cur = con.cursor()
-    # x = courier.maxw
-    # id = courier.id
-    # cur.execute(f"""
-    # UPDATE orders SET is_took = TRUE
-    # WHERE order_id IN
-    # (SELECT id FROM orders WHERE weight > {x} AND orders_courier = {id})
-    # """)
-    # con.commit()
+    for i in db_sess.query(Order).filter(Order.orders_courier == courier_id).all():
+        if i.weight > courier_id.maxw:
+            i.courier_id = 0
     res = {}
     res['courier_id'] = courier_id
     res['courier_type'] = rev_c_type[courier.maxw]
@@ -133,6 +147,28 @@ def edit_courier(courier_id):
     res['regions'] = b
     print(res)
     return jsonify(res), 201
+
+
+@blueprint.route('/orders/assign', methods=["POST"])
+def assign_orders():
+    courier_id = request.json['courier_id']
+    db_sess = db_session.create_session()
+    courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
+    if not courier:
+        abort(400)
+    ords = db_sess.query(Order).filter(
+        # график работы совпадает с графиком доставки
+        is_t_ok(db_sess.query(WH).filter(WH.courier_id == courier_id).all(),
+                db_sess.query(DH).filter(DH.order_id == Order.id).all()),
+        # регион подходит
+        Order.region.in_(db_sess.query(Region).filter(Region.courier_id == courier_id).all())
+    ).all()
+    res = []
+    for order in ords:
+        order.orders_courier = courier_id
+        res.append({'id': order.id})
+    assign_time = datetime.datetime.now()
+    return jsonify({"orders": res, 'assign_time': str(assign_time)})
 
 
 @blueprint.route('/test', methods=['GET'])

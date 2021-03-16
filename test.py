@@ -1,5 +1,24 @@
 import requests
 
+
+def is_time_ok(t1, t2) -> bool:
+    # format HH:MM - HH:MM
+    b1, b2 = t1.split(' - ')
+    start1 = b1.split(':')
+    start1 = int(start1[0]) * 60 + int(start1[1])
+    end1 = b2.split(':')
+    end1 = int(end1[0]) * 60 + int(end1[1])
+    b1, b2 = t2.split(' - ')
+    start2 = b1.split(':')
+    start2 = int(start2[0]) * 60 + int(start2[1])
+    end2 = b2.split(':')
+    end2 = int(end2[0]) * 60 + int(end2[1])
+    if max(start1, start2) <= min(end1, end2):
+        return True
+    return False
+
+
+print(is_time_ok('16:00 - 18:00', '18:00 - 19:00'))
 test_url = 'http://127.0.0.1:5000/test'
 print(requests.get(test_url).json())
 
