@@ -22,16 +22,27 @@ def add_couriers():
     req_json = request.json['data']
     db_sess = db_session.create_session()
     res = []
+    bad_id = []
     is_ok = True
     for courier_info in req_json:
         if set(dict(courier_info).keys()) != fields:
             is_ok = False
+            bad_id.append(int(courier_info['courier_id']))
+            continue
         courier = Courier()
         res.append({"id": int(courier_info['courier_id'])})
         courier.id = int(courier_info['courier_id'])
         courier.maxw = c_type[str(courier_info['courier_type'])]
-        courier.regions = list((courier_info['regions']))
-        courier.working_hours = list(courier_info['working_hours'])
+        for i in list((courier_info['regions'])):
+            reg = Region()
+            reg.courier_id = courier.id
+            reg.region = i
+            db_sess.add(reg)
+        for i in list(courier_info['working_hours']):
+            wh = WH()
+            wh.courier_id = courier.id
+            wh.hours = i
+            db_sess.add(wh)
         db_sess.add(courier)
     db_sess.commit()
     if is_ok:
