@@ -1,5 +1,6 @@
 import flask
 from flask import jsonify, abort, request, Blueprint
+from sqlite3 import connect
 
 from data import db_session
 from data.couriers import Courier
@@ -7,7 +8,6 @@ from data.orders import Order
 from data.regions import Region
 from data.workinghours import WH
 from data.deliveryhours import DH
-from main import bad_request
 
 blueprint = Blueprint(
     'shop_api',
@@ -17,6 +17,7 @@ blueprint = Blueprint(
 courier_fields = {'courier_id', 'courier_type', 'regions', 'working_hours'}
 order_fields = {'order_id', 'weight', 'region', 'delivery_hours'}
 c_type = {'foot': 10, 'bike': 15, 'car': 50}
+rev_c_type = {10: 'foot', 15: 'bike', 50: 'car'}
 
 
 @blueprint.route('/couriers', methods=["POST"])
@@ -71,7 +72,7 @@ def add_orders():
         order.id = order_info['order_id']
         order.weight = order_info['weight']
         order.region = order_info['region']
-        order.is_took = False
+        order.orders_courier = 0
         for i in list(order_info['delivery_hours']):
             dh = DH()
             dh.order_id = order.id
@@ -88,19 +89,50 @@ def add_orders():
 
 @blueprint.route('/couriers/<courier_id>', methods=["PATCH"])
 def edit_courier(courier_id):
-    req_json = request.json['data']
+    req_json = request.json
     db_sess = db_session.create_session()
-    res = []
-    is_ok = True
     courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
-    if set(dict(req_json).keys()) != courier_fields:
-        for k, v in dict(req_json):
-            courier.__setattr__(k, v)
-        db_sess.commit()
-    if is_ok:
-        return jsonify('Информация о клиенте'), 201
-    else:
-        bad_request(404, 'ahahahha', 'hffhhfhf')
+    if not (set(req_json.keys()) <= courier_fields):
+        abort(400)
+    for k, v in dict(req_json).items():
+        if k == 'id':
+            courier.id = v
+        elif k == 'type':
+            courier.maxw = c_type[v]
+        elif k == 'regions':
+            db_sess.query(Region).filter(Region.courier_id == courier.id).delete()
+            for i in v:
+                reg = Region()
+                reg.courier_id = courier.id
+                reg.region = i
+                db_sess.add(reg)
+        elif k == 'working_hours':
+            db_sess.query(WH).filter(WH.courier_id == courier.id).delete()
+            for i in v:
+                wh = WH()
+                wh.courier_id = courier.id
+                wh.hours = i
+                db_sess.add(wh)
+    db_sess.commit()
+    # con = connect('db/couriers.db')
+    # cur = con.cursor()
+    # x = courier.maxw
+    # id = courier.id
+    # cur.execute(f"""
+    # UPDATE orders SET is_took = TRUE
+    # WHERE order_id IN
+    # (SELECT id FROM orders WHERE weight > {x} AND orders_courier = {id})
+    # """)
+    # con.commit()
+    res = {}
+    res['courier_id'] = courier_id
+    res['courier_type'] = rev_c_type[courier.maxw]
+    a = [i.hours for i in db_sess.query(WH).filter(WH.courier_id == courier.id).all()]
+    res['working_hours'] = a
+    b = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()]
+    res['regions'] = b
+    print(res)
+    return jsonify(res), 201
 
 
 @blueprint.route('/test', methods=['GET'])

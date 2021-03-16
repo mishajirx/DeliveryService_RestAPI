@@ -8,4 +8,4 @@ class Order(SqlAlchemyBase):
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
     weight = sqlalchemy.Column(sqlalchemy.Float, nullable=True)
     region = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
-    is_took = sqlalchemy.Column(sqlalchemy.Boolean, nullable=True)
+    orders_courier = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
