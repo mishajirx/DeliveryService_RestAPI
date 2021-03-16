@@ -30,7 +30,6 @@ def add_couriers():
             bad_id.append(int(courier_info['courier_id']))
             continue
         courier = Courier()
-        res.append({"id": int(courier_info['courier_id'])})
         courier.id = int(courier_info['courier_id'])
         courier.maxw = c_type[str(courier_info['courier_type'])]
         for i in list((courier_info['regions'])):
@@ -44,7 +43,9 @@ def add_couriers():
             wh.hours = i
             db_sess.add(wh)
         db_sess.add(courier)
+        res.append({"id": int(courier_info['courier_id'])})
     db_sess.commit()
+
     if is_ok:
         return jsonify({"couriers": res}), 201
     abort(400)
