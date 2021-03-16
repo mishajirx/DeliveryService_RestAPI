@@ -1,12 +1,12 @@
 import flask
 from flask import jsonify, abort, request, Blueprint
 
-from YandexBackend.data import db_session
-from YandexBackend.data.couriers import Courier
-from YandexBackend.data.orders import Order
-from YandexBackend.data.regions import Region
-from YandexBackend.data.workinghours import WH
-from YandexBackend.data.deliveryhours import DH
+from data import db_session
+from data.couriers import Courier
+from data.orders import Order
+from data.regions import Region
+from data.workinghours import WH
+from data.deliveryhours import DH
 
 blueprint = Blueprint(
     'shop_api',
@@ -54,11 +54,6 @@ def edit_courier(courier_id):
         return jsonify('Информация о клиенте'), 201
     else:
         abort(400)
-
-
-@blueprint.route('/test', methods=['GET'])
-def test():
-    return jsonify({"a": 2}), 201
 
 
 @blueprint.route('/test', methods=['GET'])

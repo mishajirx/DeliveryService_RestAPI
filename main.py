@@ -1,5 +1,5 @@
 from flask import Flask, make_response, jsonify, abort, request, blueprints
-from YandexBackend.data import db_session, shop_api
+from data import db_session, shop_api
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -23,7 +23,7 @@ def hello():
 
 def main():
     db_session.global_init("db/couriers.db")
-    # app.register_blueprint(shop_api.blueprint)
+    app.register_blueprint(shop_api.blueprint)
     app.run(host='0.0.0.0', port=8080)
 
 
