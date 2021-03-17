@@ -138,7 +138,7 @@ def edit_courier(courier_id):
                 db_sess.add(wh)
     db_sess.commit()
     for i in db_sess.query(Order).filter(Order.orders_courier == courier_id).all():
-        if i.weight > courier_id.maxw:
+        if i.weight > courier.maxw:
             i.courier_id = 0
     res = {}
     res['courier_id'] = courier_id
