@@ -20,6 +20,7 @@ courier_fields = {'courier_id', 'courier_type', 'regions', 'working_hours'}
 order_fields = {'order_id', 'weight', 'region', 'delivery_hours'}
 c_type = {'foot': 10, 'bike': 15, 'car': 50}
 rev_c_type = {10: 'foot', 15: 'bike', 50: 'car'}
+kd = {10: 2, 15: 5, 50: 9}
 
 
 def is_t_ok(l1, l2) -> bool:
@@ -51,7 +52,6 @@ def add_couriers():
     bad_id = []
     is_ok = True
     for courier_info in req_json:
-        # print(set(dict(courier_info).keys()))
         if set(dict(courier_info).keys()) != courier_fields:
             is_ok = False
             bad_id.append({"id": int(courier_info['courier_id'])})
@@ -86,7 +86,6 @@ def add_orders():
     bad_id = []
     is_ok = True
     for order_info in req_json:
-        # print(set(dict(order_info).keys()))
         if set(dict(order_info).keys()) != order_fields:
             is_ok = False
             bad_id.append({"id": int(order_info['order_id'])})
@@ -110,44 +109,62 @@ def add_orders():
     return jsonify({"validation_error": bad_id}), 400
 
 
-@blueprint.route('/couriers/<courier_id>', methods=["PATCH"])
+@blueprint.route('/couriers/<courier_id>', methods=["PATCH", "GET"])
 def edit_courier(courier_id):
-    req_json = request.json
-    db_sess = db_session.create_session()
-    courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
-    if not (set(req_json.keys()) <= courier_fields):
-        abort(400)
-    for k, v in dict(req_json).items():
-        if k == 'id':
-            courier.id = v
-        elif k == 'type':
-            courier.maxw = c_type[v]
-        elif k == 'regions':
-            db_sess.query(Region).filter(Region.courier_id == courier.id).delete()
-            for i in v:
-                reg = Region()
-                reg.courier_id = courier.id
-                reg.region = i
-                db_sess.add(reg)
-        elif k == 'working_hours':
-            db_sess.query(WH).filter(WH.courier_id == courier.id).delete()
-            for i in v:
-                wh = WH()
-                wh.courier_id = courier.id
-                wh.hours = i
-                db_sess.add(wh)
-    db_sess.commit()
-    for i in db_sess.query(Order).filter(Order.orders_courier == courier_id).all():
-        if i.weight > courier.maxw:
-            i.courier_id = 0
-    res = {}
-    res['courier_id'] = courier_id
-    res['courier_type'] = rev_c_type[courier.maxw]
-    a = [i.hours for i in db_sess.query(WH).filter(WH.courier_id == courier.id).all()]
-    res['working_hours'] = a
-    b = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()]
-    res['regions'] = b
-    return jsonify(res), 201
+    if request.method == 'PATCH':
+        req_json = request.json
+        db_sess = db_session.create_session()
+        courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
+        if not (set(req_json.keys()) <= courier_fields):
+            abort(400)
+        for k, v in dict(req_json).items():
+            if k == 'id':
+                courier.id = v
+            elif k == 'type':
+                courier.maxw = c_type[v]
+            elif k == 'regions':
+                db_sess.query(Region).filter(Region.courier_id == courier.id).delete()
+                for i in v:
+                    reg = Region()
+                    reg.courier_id = courier.id
+                    reg.region = i
+                    db_sess.add(reg)
+            elif k == 'working_hours':
+                db_sess.query(WH).filter(WH.courier_id == courier.id).delete()
+                for i in v:
+                    wh = WH()
+                    wh.courier_id = courier.id
+                    wh.hours = i
+                    db_sess.add(wh)
+        db_sess.commit()
+        for i in db_sess.query(Order).filter(Order.orders_courier == courier_id).all():
+            if i.weight > courier.maxw:
+                i.courier_id = 0
+        res = {}
+        res['courier_id'] = courier_id
+        res['courier_type'] = rev_c_type[courier.maxw]
+        a = [i.hours for i in db_sess.query(WH).filter(WH.courier_id == courier.id).all()]
+        res['working_hours'] = a
+        b = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()]
+        res['regions'] = b
+        return jsonify(res), 201
+    elif request.method == 'GET':
+        db_sess = db_session.create_session()
+        courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
+        res = {}
+        res['courier_id'] = courier_id
+        res['courier_type'] = rev_c_type[courier.maxw]
+        a = [i.hours for i in db_sess.query(WH).filter(WH.courier_id == courier.id).all()]
+        res['working_hours'] = a
+        b = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()]
+        res['regions'] = b
+        res['earnings'] = courier.amount_deliveries * 500 * kd[courier.maxw]
+        t = min([i.summa / i.q
+                 for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()
+                 if i.q != 0])
+        print((60 * 60 - min(t, 60 * 60)), (60 * 60) * 5)
+        res['rating'] = (60 * 60 - min(t, 60 * 60)) / (60 * 60) * 5
+        return jsonify(res), 201
 
 
 @blueprint.route('/orders/assign', methods=["POST"])
@@ -169,12 +186,20 @@ def assign_orders():
     ).all()
     for order in ords:
         order.orders_courier = courier_id
+    print(ords)
     db_sess.commit()
     res = [{'id': order.id} for order in
-           db_sess.query(Order).filter(Order.orders_courier == courier_id)]
+           db_sess.query(Order).filter(
+               Order.orders_courier == courier_id, '' == Order.complete_time
+           )
+           ]
     if not res:
         return jsonify({"orders": res}), 201
     assign_time = str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
+    if '' == courier.last_delivery_t:
+        courier.last_delivery_t = assign_time
+    courier.amount_deliveries += 1
+    db_sess.commit()
     return jsonify({"orders": res, 'assign_time': str(assign_time)}), 201
 
 
@@ -189,7 +214,15 @@ def complete_orders():
     order = db_sess.query(Order).filter(Order.id == order_id).first()
     if not courier or not order or order.orders_courier != courier.id:
         abort(400)
-    order.orders_courier = -1
+    db_sess.commit()
+    reg = db_sess.query(Region).filter(
+        Region.region == order.region, Region.courier_id == courier_id
+    ).first()
+    courier.last_delivery_t = complete_t
+    reg.q += 1
+    u = datetime.datetime.fromisoformat(complete_t.split('.')[0])
+    v = datetime.datetime.fromisoformat(courier.last_delivery_t.split('.')[0])
+    reg.summa += (u - v).total_seconds()
     order.complete_time = complete_t
     db_sess.commit()
     return jsonify({'order_id': order.id}), 201
