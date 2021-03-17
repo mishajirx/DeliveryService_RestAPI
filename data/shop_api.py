@@ -167,11 +167,11 @@ def assign_orders():
         ),
         (Order.orders_courier == 0) | (Order.orders_courier == courier_id)
     ).all()
-    res = []
     for order in ords:
         order.orders_courier = courier_id
-        res.append({'id': order.id})
     db_sess.commit()
+    res = [{'id': order.id} for order in
+           db_sess.query(Order).filter(Order.orders_courier == courier_id)]
     if not res:
         return jsonify({"orders": res}), 201
     assign_time = str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
@@ -190,6 +190,7 @@ def complete_orders():
     if not courier or not order or order.orders_courier != courier.id:
         abort(400)
     order.orders_courier = -1
+    order.complete_time = complete_t
     db_sess.commit()
     return jsonify({'order_id': order.id}), 201
 
