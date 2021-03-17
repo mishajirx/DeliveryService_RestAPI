@@ -187,9 +187,11 @@ def complete_orders():
     complete_t = req_json['complete_time']
     courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
     order = db_sess.query(Order).filter(Order.id == order_id).first()
-    if order.orders_courier != courier.id:
+    if not courier or not order or order.orders_courier != courier.id:
         abort(400)
-    order.delete()
+    order.orders_courier = -1
+    db_sess.commit()
+    return jsonify({'order_id': order.id}), 201
 
 
 @blueprint.route('/test', methods=['GET'])
