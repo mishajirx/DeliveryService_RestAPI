@@ -1,3 +1,4 @@
+import datetime
 import requests
 
 test_url = 'http://127.0.0.1:5000/test'
@@ -27,28 +28,16 @@ data = {
         }
     ]
 }
-print(requests.post(url, json=data).json())
+# print(requests.post(url, json=data).json())
 # add orders
 url = 'http://127.0.0.1:5000/orders'
 data = {
     "data": [
         {
-            "order_id": 1,
-            "weight": 0.23,
-            "region": 12,
-            "delivery_hours": ["09:00-18:00"]
-        },
-        {
-            "order_id": 2,
+            "order_id": 8,
             "weight": 15,
-            "region": 1,
+            "region": 22,
             "delivery_hours": ["09:00-18:00"]
-        },
-        {
-            "order_id": 3,
-            "weight": 0.01,
-            "region": 11,
-            "delivery_hours": ["09:00-12:00", "16:00-21:30"]
         }
     ]
 }
@@ -58,18 +47,21 @@ url = 'http://127.0.0.1:5000/couriers/2'
 data = {
     "regions": [11, 33, 2]
 }
-print(requests.patch(url, json=data).json())
+# print(requests.patch(url, json=data).json())
 # assign orders
 url = 'http://127.0.0.1:5000/orders/assign'
 data = {
-    'courier_id': 2,
+    'courier_id': 3,
 }
 # print(requests.post(url, json=data).json())
 # complete_orders
 url = 'http://127.0.0.1:5000/orders/complete'
 data = {
-    'courier_id': 2,
-    'order_id': 3,
-    'complete_time': "2021-01-10T10:33:01.42Z"
+    'courier_id': 3,
+    'order_id': 8,
+    'complete_time': "2021-03-17T23:53:01.42Z"
 }
 # print(requests.post(url, json=data).json())
+
+url = 'http://127.0.0.1:5000/couriers/3'
+print(requests.get(url).json())

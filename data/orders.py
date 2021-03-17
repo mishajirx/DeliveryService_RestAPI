@@ -9,4 +9,4 @@ class Order(SqlAlchemyBase):
     weight = sqlalchemy.Column(sqlalchemy.Float, nullable=True)
     region = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
     orders_courier = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
-    complete_time = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    complete_time = sqlalchemy.Column(sqlalchemy.String, nullable=True, default='')
