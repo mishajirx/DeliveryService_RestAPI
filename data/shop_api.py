@@ -27,7 +27,7 @@ def is_t_ok(l1, l2) -> bool:
     time = [0] * 1440
     for h in list(l1) + list(l2):
         t = h.hours
-        print(t)
+        # print(t)
         b1, b2 = t.split('-')
         a = b1.split(':')
         a = int(a[0]) * 60 + int(a[1])
@@ -51,7 +51,7 @@ def add_couriers():
     bad_id = []
     is_ok = True
     for courier_info in req_json:
-        print(set(dict(courier_info).keys()))
+        # print(set(dict(courier_info).keys()))
         if set(dict(courier_info).keys()) != courier_fields:
             is_ok = False
             bad_id.append({"id": int(courier_info['courier_id'])})
@@ -86,7 +86,7 @@ def add_orders():
     bad_id = []
     is_ok = True
     for order_info in req_json:
-        print(set(dict(order_info).keys()))
+        # print(set(dict(order_info).keys()))
         if set(dict(order_info).keys()) != order_fields:
             is_ok = False
             bad_id.append({"id": int(order_info['order_id'])})
@@ -165,7 +165,7 @@ def assign_orders():
         Order.region.in_(
             [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier_id).all()]
         ),
-        Order.orders_courier == 0
+        (Order.orders_courier == 0) | (Order.orders_courier == courier_id)
     ).all()
     res = []
     for order in ords:
@@ -174,7 +174,7 @@ def assign_orders():
     db_sess.commit()
     if not res:
         return jsonify({"orders": res}), 201
-    assign_time = str(datetime.datetime.now()).replace(' ', 'T') + 'Z'
+    assign_time = str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     return jsonify({"orders": res, 'assign_time': str(assign_time)}), 201
 
 
