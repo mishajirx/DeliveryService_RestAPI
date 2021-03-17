@@ -1,37 +1,9 @@
 import requests
 
-
-def is_time_ok(t1, t2) -> bool:
-    # format HH:MM - HH:MM
-    b1, b2 = t1.split(' - ')
-    start1 = b1.split(':')
-    start1 = int(start1[0]) * 60 + int(start1[1])
-    end1 = b2.split(':')
-    end1 = int(end1[0]) * 60 + int(end1[1])
-    b1, b2 = t2.split(' - ')
-    start2 = b1.split(':')
-    start2 = int(start2[0]) * 60 + int(start2[1])
-    end2 = b2.split(':')
-    end2 = int(end2[0]) * 60 + int(end2[1])
-    if max(start1, start2) <= min(end1, end2):
-        return True
-    return False
-
-
-print(is_time_ok('16:00 - 18:00', '18:00 - 19:00'))
 test_url = 'http://127.0.0.1:5000/test'
 print(requests.get(test_url).json())
 
-url = 'http://127.0.0.1:5000/couriers/2'
-
-data = {
-    "regions": [11, 33, 2]
-}
-
-print(requests.patch(url, json=data).json())
-
 url = 'http://127.0.0.1:5000/couriers'
-
 data = {
     "data": [
         {
@@ -55,3 +27,36 @@ data = {
     ]
 }
 # print(requests.post(url, json=data).json())
+
+url = 'http://127.0.0.1:5000/orders'
+
+data = {
+    "data": [
+        {
+            "order_id": 1,
+            "weight": 0.23,
+            "region": 12,
+            "delivery_hours": ["09:00-18:00"]
+        },
+        {
+            "order_id": 2,
+            "weight": 15,
+            "region": 1,
+            "delivery_hours": ["09:00-18:00"]
+        },
+        {
+            "order_id": 3,
+            "weight": 0.01,
+            "region": 22,
+            "delivery_hours": ["09:00-12:00", "16:00-21:30"]
+        },
+        ...
+    ]
+}
+# print(requests.post(url, json=data).json())
+
+url = 'http://127.0.0.1:5000/orders/assign'
+data = {
+    "courier_id": 8
+}
+print(requests.post(url, json=data).json())

@@ -25,8 +25,10 @@ rev_c_type = {10: 'foot', 15: 'bike', 50: 'car'}
 def is_t_ok(l1, l2) -> bool:
     # format HH:MM - HH:MM
     time = [0] * 1440
-    for t in list(l1) + list(l2):
-        b1, b2 = t.split(' - ')
+    for h in list(l1) + list(l2):
+        t = h.hours
+        print(t)
+        b1, b2 = t.split('-')
         a = b1.split(':')
         a = int(a[0]) * 60 + int(a[1])
         b = b2.split(':')
@@ -145,7 +147,6 @@ def edit_courier(courier_id):
     res['working_hours'] = a
     b = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()]
     res['regions'] = b
-    print(res)
     return jsonify(res), 201
 
 
@@ -161,14 +162,20 @@ def assign_orders():
         is_t_ok(db_sess.query(WH).filter(WH.courier_id == courier_id).all(),
                 db_sess.query(DH).filter(DH.order_id == Order.id).all()),
         # регион подходит
-        Order.region.in_(db_sess.query(Region).filter(Region.courier_id == courier_id).all())
+        Order.region.in_(
+            [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier_id).all()]
+        ),
+        Order.orders_courier == 0
     ).all()
     res = []
     for order in ords:
         order.orders_courier = courier_id
         res.append({'id': order.id})
-    assign_time = datetime.datetime.now()
-    return jsonify({"orders": res, 'assign_time': str(assign_time)})
+    db_sess.commit()
+    if not res:
+        return jsonify({"orders": res}), 201
+    assign_time = str(datetime.datetime.now()).replace(' ', 'T') + 'Z'
+    return jsonify({"orders": res, 'assign_time': str(assign_time)}), 201
 
 
 @blueprint.route('/test', methods=['GET'])
