@@ -178,6 +178,20 @@ def assign_orders():
     return jsonify({"orders": res, 'assign_time': str(assign_time)}), 201
 
 
+@blueprint.route('/orders/complete', methods=["POST"])
+def complete_orders():
+    req_json = request.json
+    db_sess = db_session.create_session()
+    courier_id = req_json['courier_id']
+    order_id = req_json['order_id']
+    complete_t = req_json['complete_time']
+    courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
+    order = db_sess.query(Order).filter(Order.id == order_id).first()
+    if order.orders_courier != courier.id:
+        abort(400)
+    order.delete()
+
+
 @blueprint.route('/test', methods=['GET'])
 def test():
     return jsonify({"a": 2}), 201
