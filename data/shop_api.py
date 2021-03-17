@@ -1,9 +1,8 @@
-import datetime
-
 import flask
 from flask import jsonify, abort, request, Blueprint
 from sqlite3 import connect
 
+import datetime
 from data import db_session
 from data.couriers import Courier
 from data.orders import Order
@@ -20,27 +19,6 @@ courier_fields = {'courier_id', 'courier_type', 'regions', 'working_hours'}
 order_fields = {'order_id', 'weight', 'region', 'delivery_hours'}
 c_type = {'foot': 10, 'bike': 15, 'car': 50}
 rev_c_type = {10: 'foot', 15: 'bike', 50: 'car'}
-
-
-def is_t_ok(l1, l2) -> bool:
-    # format HH:MM - HH:MM
-    time = [0] * 1440
-    for h in list(l1) + list(l2):
-        t = h.hours
-        print(t)
-        b1, b2 = t.split('-')
-        a = b1.split(':')
-        a = int(a[0]) * 60 + int(a[1])
-        b = b2.split(':')
-        b = int(b[0]) * 60 + int(b[1])
-        time[a] += 1
-        time[b + 1] -= 1
-    balance = 0
-    for i in time:
-        balance += i
-        if balance >= 2:
-            return True
-    return False
 
 
 @blueprint.route('/couriers', methods=["POST"])
@@ -148,8 +126,6 @@ def edit_courier(courier_id):
     b = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()]
     res['regions'] = b
     return jsonify(res), 201
-
-
 @blueprint.route('/orders/assign', methods=["POST"])
 def assign_orders():
     courier_id = request.json['courier_id']
@@ -165,17 +141,34 @@ def assign_orders():
         Order.region.in_(
             [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier_id).all()]
         ),
-        Order.orders_courier == 0
+        (Order.orders_courier == 0) | (Order.orders_courier == courier_id)
     ).all()
-    res = []
     for order in ords:
         order.orders_courier = courier_id
-        res.append({'id': order.id})
     db_sess.commit()
+    res = [{'id': order.id} for order in
+           db_sess.query(Order).filter(Order.orders_courier == courier_id)]
     if not res:
         return jsonify({"orders": res}), 201
-    assign_time = str(datetime.datetime.now()).replace(' ', 'T') + 'Z'
+    assign_time = str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     return jsonify({"orders": res, 'assign_time': str(assign_time)}), 201
+
+
+@blueprint.route('/orders/complete', methods=["POST"])
+def complete_orders():
+    req_json = request.json
+    db_sess = db_session.create_session()
+    courier_id = req_json['courier_id']
+    order_id = req_json['order_id']
+    complete_t = req_json['complete_time']
+    courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
+    order = db_sess.query(Order).filter(Order.id == order_id).first()
+    if not courier or not order or order.orders_courier != courier.id:
+        abort(400)
+    order.orders_courier = -1
+    order.complete_time = complete_t
+    db_sess.commit()
+    return jsonify({'order_id': order.id}), 201
 
 
 @blueprint.route('/test', methods=['GET'])
