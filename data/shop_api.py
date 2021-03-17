@@ -1,8 +1,9 @@
+import datetime
+
 import flask
 from flask import jsonify, abort, request, Blueprint
 from sqlite3 import connect
 
-import datetime
 from data import db_session
 from data.couriers import Courier
 from data.orders import Order
@@ -21,6 +22,27 @@ c_type = {'foot': 10, 'bike': 15, 'car': 50}
 rev_c_type = {10: 'foot', 15: 'bike', 50: 'car'}
 
 
+def is_t_ok(l1, l2) -> bool:
+    # format HH:MM - HH:MM
+    time = [0] * 1440
+    for h in list(l1) + list(l2):
+        t = h.hours
+        # print(t)
+        b1, b2 = t.split('-')
+        a = b1.split(':')
+        a = int(a[0]) * 60 + int(a[1])
+        b = b2.split(':')
+        b = int(b[0]) * 60 + int(b[1])
+        time[a] += 1
+        time[b + 1] -= 1
+    balance = 0
+    for i in time:
+        balance += i
+        if balance >= 2:
+            return True
+    return False
+
+
 @blueprint.route('/couriers', methods=["POST"])
 def add_couriers():
     req_json = request.json['data']
@@ -29,7 +51,7 @@ def add_couriers():
     bad_id = []
     is_ok = True
     for courier_info in req_json:
-        print(set(dict(courier_info).keys()))
+        # print(set(dict(courier_info).keys()))
         if set(dict(courier_info).keys()) != courier_fields:
             is_ok = False
             bad_id.append({"id": int(courier_info['courier_id'])})
@@ -64,7 +86,7 @@ def add_orders():
     bad_id = []
     is_ok = True
     for order_info in req_json:
-        print(set(dict(order_info).keys()))
+        # print(set(dict(order_info).keys()))
         if set(dict(order_info).keys()) != order_fields:
             is_ok = False
             bad_id.append({"id": int(order_info['order_id'])})
@@ -126,6 +148,8 @@ def edit_courier(courier_id):
     b = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()]
     res['regions'] = b
     return jsonify(res), 201
+
+
 @blueprint.route('/orders/assign', methods=["POST"])
 def assign_orders():
     courier_id = request.json['courier_id']

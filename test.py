@@ -27,7 +27,7 @@ data = {
         }
     ]
 }
-print(requests.post(url, json=data).json())
+#print(requests.post(url, json=data).json())
 # add orders
 url = 'http://127.0.0.1:5000/orders'
 data = {
@@ -52,13 +52,13 @@ data = {
         }
     ]
 }
-print(requests.post(url, json=data).json())
+#print(requests.post(url, json=data).json())
 # edit courier
 url = 'http://127.0.0.1:5000/couriers/2'
 data = {
     "regions": [11, 33, 2]
 }
-print(requests.patch(url, json=data).json())
+#print(requests.patch(url, json=data).json())
 # assign orders
 url = 'http://127.0.0.1:5000/orders/assign'
 data = {
