@@ -110,44 +110,58 @@ def add_orders():
     return jsonify({"validation_error": bad_id}), 400
 
 
-@blueprint.route('/couriers/<courier_id>', methods=["PATCH"])
+@blueprint.route('/couriers/<courier_id>', methods=["PATCH", "GET"])
 def edit_courier(courier_id):
-    req_json = request.json
-    db_sess = db_session.create_session()
-    courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
-    if not (set(req_json.keys()) <= courier_fields):
-        abort(400)
-    for k, v in dict(req_json).items():
-        if k == 'id':
-            courier.id = v
-        elif k == 'type':
-            courier.maxw = c_type[v]
-        elif k == 'regions':
-            db_sess.query(Region).filter(Region.courier_id == courier.id).delete()
-            for i in v:
-                reg = Region()
-                reg.courier_id = courier.id
-                reg.region = i
-                db_sess.add(reg)
-        elif k == 'working_hours':
-            db_sess.query(WH).filter(WH.courier_id == courier.id).delete()
-            for i in v:
-                wh = WH()
-                wh.courier_id = courier.id
-                wh.hours = i
-                db_sess.add(wh)
-    db_sess.commit()
-    for i in db_sess.query(Order).filter(Order.orders_courier == courier_id).all():
-        if i.weight > courier.maxw:
-            i.courier_id = 0
-    res = {}
-    res['courier_id'] = courier_id
-    res['courier_type'] = rev_c_type[courier.maxw]
-    a = [i.hours for i in db_sess.query(WH).filter(WH.courier_id == courier.id).all()]
-    res['working_hours'] = a
-    b = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()]
-    res['regions'] = b
-    return jsonify(res), 201
+    if request.method == 'PATCH':
+        req_json = request.json
+        db_sess = db_session.create_session()
+        courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
+        if not (set(req_json.keys()) <= courier_fields):
+            abort(400)
+        for k, v in dict(req_json).items():
+            if k == 'id':
+                courier.id = v
+            elif k == 'type':
+                courier.maxw = c_type[v]
+            elif k == 'regions':
+                db_sess.query(Region).filter(Region.courier_id == courier.id).delete()
+                for i in v:
+                    reg = Region()
+                    reg.courier_id = courier.id
+                    reg.region = i
+                    db_sess.add(reg)
+            elif k == 'working_hours':
+                db_sess.query(WH).filter(WH.courier_id == courier.id).delete()
+                for i in v:
+                    wh = WH()
+                    wh.courier_id = courier.id
+                    wh.hours = i
+                    db_sess.add(wh)
+        db_sess.commit()
+        for i in db_sess.query(Order).filter(Order.orders_courier == courier_id).all():
+            if i.weight > courier.maxw:
+                i.courier_id = 0
+        res = {}
+        res['courier_id'] = courier_id
+        res['courier_type'] = rev_c_type[courier.maxw]
+        a = [i.hours for i in db_sess.query(WH).filter(WH.courier_id == courier.id).all()]
+        res['working_hours'] = a
+        b = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()]
+        res['regions'] = b
+        return jsonify(res), 201
+    elif request.method == 'GET':
+        db_sess = db_session.create_session()
+        courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
+        res = {}
+        res['courier_id'] = courier_id
+        res['courier_type'] = rev_c_type[courier.maxw]
+        a = [i.hours for i in db_sess.query(WH).filter(WH.courier_id == courier.id).all()]
+        res['working_hours'] = a
+        b = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()]
+        res['regions'] = b
+        res['earnings'] = 0
+        res['rating'] = 0.0
+        return jsonify(res), 201
 
 
 @blueprint.route('/orders/assign', methods=["POST"])
