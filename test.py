@@ -1,6 +1,6 @@
 import requests
 
-test_url = 'http://127.0.0.1:5000/test'
+test_url = 'http://0.0.0.0:8080/test'
 print(requests.get(test_url).json())
 
 # add couriers
@@ -27,7 +27,7 @@ data = {
         }
     ]
 }
-#print(requests.post(url, json=data).json())
+# print(requests.post(url, json=data).json())
 # add orders
 url = 'http://127.0.0.1:5000/orders'
 data = {
@@ -52,19 +52,19 @@ data = {
         }
     ]
 }
-#print(requests.post(url, json=data).json())
+# print(requests.post(url, json=data).json())
 # edit courier
 url = 'http://127.0.0.1:5000/couriers/2'
 data = {
     "regions": [11, 33, 2]
 }
-#print(requests.patch(url, json=data).json())
+# print(requests.patch(url, json=data).json())
 # assign orders
 url = 'http://127.0.0.1:5000/orders/assign'
 data = {
     'courier_id': 2,
 }
-print(requests.post(url, json=data).json())
+# print(requests.post(url, json=data).json())
 # complete_orders
 url = 'http://127.0.0.1:5000/orders/complete'
 data = {
@@ -72,4 +72,4 @@ data = {
     'order_id': 3,
     'complete_time': "2021-01-10T10:33:01.42Z"
 }
-print(requests.post(url, json=data).json())
+# print(requests.post(url, json=data).json())
