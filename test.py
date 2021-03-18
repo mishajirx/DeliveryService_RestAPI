@@ -75,3 +75,4 @@ print(requests.get(test_url).json())
 # add_orders([3, 0.5, 13, ['11:00-13:30']]) passed
 # assign_orders(1) passed
 # complete_orders(1, 3, '2021-04-10T10:53:01.42Z') passed
+# get_courier(1) passed
