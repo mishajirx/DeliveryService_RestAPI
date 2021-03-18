@@ -52,11 +52,13 @@ def add_couriers():
     db_sess = db_session.create_session()
     res = []
     bad_id = []
+    already_in_base = [i.id for i in db_sess.query(Order).all()]
     is_ok = True
     for courier_info in req_json:
-        if set(dict(courier_info).keys()) != courier_fields:
+        if set(dict(courier_info).keys()) != courier_fields or courier_info['order_id'] in already_in_base:
             is_ok = False
             bad_id.append({"id": int(courier_info['courier_id'])})
+        if not is_ok:
             continue
         courier = Courier()
         courier.id = courier_info['courier_id']
@@ -73,9 +75,9 @@ def add_couriers():
             db_sess.add(wh)
         db_sess.add(courier)
         res.append({"id": courier_info['courier_id']})
-    db_sess.commit()
 
     if is_ok:
+        db_sess.commit()
         return jsonify({"couriers": res}), 201
     return jsonify({"validation_error": bad_id}), 400
 
@@ -87,10 +89,13 @@ def add_orders():
     res = []
     bad_id = []
     is_ok = True
+    already_in_base = [i.id for i in db_sess.query(Order).all()]
     for order_info in req_json:
-        if set(dict(order_info).keys()) != order_fields:
+        flag = set(dict(order_info).keys()) != order_fields
+        if flag or not 0.01 <= order_info['weight'] <= 50 or order_info['order_id'] in already_in_base:
             is_ok = False
             bad_id.append({"id": int(order_info['order_id'])})
+        if not is_ok:
             continue
         order = Order()
         order.id = order_info['order_id']
@@ -104,9 +109,9 @@ def add_orders():
             db_sess.add(dh)
         db_sess.add(order)
         res.append({"id": int(order_info['order_id'])})
-    db_sess.commit()
 
     if is_ok:
+        db_sess.commit()
         return jsonify({"orders": res}), 201
     return jsonify({"validation_error": bad_id}), 400
 
@@ -151,7 +156,7 @@ def edit_courier(courier_id):
             if i.weight > courier.maxw or i.region not in res['regions'] or not is_t_ok(dh, a):
                 i.orders_courier = 0
         db_sess.commit()
-        return jsonify(res), 201
+        return jsonify(res), 200
     elif request.method == 'GET':
         db_sess = db_session.create_session()
         courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
@@ -203,13 +208,13 @@ def assign_orders():
            )
            ]
     if not res:
-        return jsonify({"orders": res}), 201
+        return jsonify({"orders": res}), 200
     assign_time = str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     if '' == courier.last_delivery_t:
         courier.last_delivery_t = assign_time
     courier.amount_deliveries += 1
     db_sess.commit()
-    return jsonify({"orders": res, 'assign_time': str(assign_time)}), 201
+    return jsonify({"orders": res, 'assign_time': str(assign_time)}), 200
 
 
 @blueprint.route('/orders/complete', methods=["POST"])
@@ -234,7 +239,7 @@ def complete_orders():
     reg.summa += (u - v).total_seconds()
     order.complete_time = complete_t
     db_sess.commit()
-    return jsonify({'order_id': order.id}), 201
+    return jsonify({'order_id': order.id}), 200
 
 
 @blueprint.route('/test', methods=['GET'])
