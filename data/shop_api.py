@@ -88,7 +88,7 @@ def add_orders():
     bad_id = []
     is_ok = True
     for order_info in req_json:
-        if set(dict(order_info).keys()) != order_fields:
+        if set(dict(order_info).keys()) != order_fields or not 0.01 <= order_info['weight'] <= 50:
             is_ok = False
             bad_id.append({"id": int(order_info['order_id'])})
             continue
@@ -151,7 +151,7 @@ def edit_courier(courier_id):
             if i.weight > courier.maxw or i.region not in res['regions'] or not is_t_ok(dh, a):
                 i.orders_courier = 0
         db_sess.commit()
-        return jsonify(res), 201
+        return jsonify(res), 200
     elif request.method == 'GET':
         db_sess = db_session.create_session()
         courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
@@ -203,13 +203,13 @@ def assign_orders():
            )
            ]
     if not res:
-        return jsonify({"orders": res}), 201
+        return jsonify({"orders": res}), 200
     assign_time = str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     if '' == courier.last_delivery_t:
         courier.last_delivery_t = assign_time
     courier.amount_deliveries += 1
     db_sess.commit()
-    return jsonify({"orders": res, 'assign_time': str(assign_time)}), 201
+    return jsonify({"orders": res, 'assign_time': str(assign_time)}), 200
 
 
 @blueprint.route('/orders/complete', methods=["POST"])
@@ -234,7 +234,7 @@ def complete_orders():
     reg.summa += (u - v).total_seconds()
     order.complete_time = complete_t
     db_sess.commit()
-    return jsonify({'order_id': order.id}), 201
+    return jsonify({'order_id': order.id}), 200
 
 
 @blueprint.route('/test', methods=['GET'])
