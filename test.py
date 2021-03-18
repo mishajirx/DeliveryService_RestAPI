@@ -76,3 +76,6 @@ print(requests.get(test_url).json())
 # assign_orders(1) passed
 # complete_orders(1, 3, '2021-04-10T10:53:01.42Z') passed
 # get_courier(1) passed
+
+# 18.03.2021 17:26:14 - all functions work correctrly
+# ready for testing on virtual machine
