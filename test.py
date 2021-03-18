@@ -71,3 +71,7 @@ print(requests.get(test_url).json())
 # add_orders([2, 0.5, 20, ['11:00-13:30']]) passed
 # assign_orders(1) passed
 # complete_orders(1, 2, '2021-04-10T10:33:01.42Z') passed
+# did commit
+# add_orders([3, 0.5, 13, ['11:00-13:30']]) passed
+# assign_orders(1) passed
+# complete_orders(1, 3, '2021-04-10T10:53:01.42Z') passed
