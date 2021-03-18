@@ -163,10 +163,14 @@ def edit_courier(courier_id):
         b = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()]
         res['regions'] = b
         res['earnings'] = courier.amount_deliveries * 500 * kd[courier.maxw]
-        t = min([i.summa / i.q
-                 for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()
-                 if i.q != 0])
-        print((60 * 60 - min(t, 60 * 60)), (60 * 60) * 5)
+        if not courier.amount_deliveries:
+            return jsonify(res), 201
+        try:
+            t = min([i.summa / i.q
+                     for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()
+                     if i.q != 0])
+        except ValueError:
+            t = 60 * 60
         res['rating'] = (60 * 60 - min(t, 60 * 60)) / (60 * 60) * 5
         return jsonify(res), 201
 
@@ -223,10 +227,10 @@ def complete_orders():
     reg = db_sess.query(Region).filter(
         Region.region == order.region, Region.courier_id == courier_id
     ).first()
-    courier.last_delivery_t = complete_t
     reg.q += 1
     u = datetime.datetime.fromisoformat(complete_t.split('.')[0])
     v = datetime.datetime.fromisoformat(courier.last_delivery_t.split('.')[0])
+    courier.last_delivery_t = complete_t
     reg.summa += (u - v).total_seconds()
     order.complete_time = complete_t
     db_sess.commit()
