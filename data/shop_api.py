@@ -174,7 +174,7 @@ def edit_courier(courier_id):
         b = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()]
         res['regions'] = b
         res['earnings'] = courier.earnings
-        if not courier.amount_deliveries:
+        if not courier.earnings:
             return jsonify(res), 201
         try:
             t = min([i.summa / i.q
