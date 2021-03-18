@@ -23,7 +23,7 @@ def add_orders(*args):
 
 
 def edit_courier(c, *args):
-    url = 'http://127.0.0.1:5000/couriers/' + c
+    url = 'http://127.0.0.1:5000/couriers/' + str(c)
     data = {}
     for k, v in args:
         data[k] = v
@@ -31,7 +31,7 @@ def edit_courier(c, *args):
 
 
 def get_courier(c):
-    url = 'http://127.0.0.1:5000/couriers/' + c
+    url = 'http://127.0.0.1:5000/couriers/' + str(c)
     print(requests.get(url).json())
 
 
@@ -55,3 +55,19 @@ def complete_orders(c_id, o_id, complete_t):
 
 test_url = 'http://127.0.0.1:5000/test'
 print(requests.get(test_url).json())
+
+# add_couriers([1, 'foot', [1,12,22], ['11:00-13:00', '18:00-22:00']]) passed
+# edit_courier(1, ('regions', [13, 55])) passed
+# add_orders([1, 0.4, 13, ['12:00-12:30']])
+# assign_orders(1) passed
+# edit_courier(1, ('regions', [20, 40])) passed
+# assign_orders(1) passed
+# edit_courier(1, ('regions', [13, 20])) passed
+# assign_orders(1) passed
+# edit_courier(1, ('working_hours', [])) passed
+# edit_courier(1, ('working_hours', ['11:00-13:00', '18:00-22:00'])) passed
+# assign_orders(1) passed
+# complete_orders(1, 1, '2021-01-10T10:33:01.42Z') not passed
+# add_orders([2, 0.5, 20, ['11:00-13:30']]) passed
+# assign_orders(1) passed
+# complete_orders(1, 2, '2021-04-10T10:33:01.42Z') passed
