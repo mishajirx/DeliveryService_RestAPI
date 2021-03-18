@@ -56,10 +56,11 @@ def complete_orders(c_id, o_id, complete_t):
 test_url = 'http://127.0.0.1:5000/test'
 print(requests.get(test_url).json())
 
-# add_couriers([1, 'foot', [1,12,22], ['11:00-13:00', '18:00-22:00']]) passed
-# edit_courier(1, ('regions', [13, 55])) passed
-# add_orders([1, 0.4, 13, ['12:00-12:30']])
+# add_couriers([1, 'foot', [1, 12, 22], ['11:00-13:00', '18:00-22:00']]) passed
+# edit_courier(1, ('regions', [13, 55]))
+# add_orders([9, 0.4, 13, ['12:00-12:30']])
 # assign_orders(1) passed
+# add_orders([10, 0.4, 13, ['12:00-12:30']], [11, 40, 13, ['12:00-12:30']]) passed
 # edit_courier(1, ('regions', [20, 40])) passed
 # assign_orders(1) passed
 # edit_courier(1, ('regions', [13, 20])) passed
@@ -71,11 +72,33 @@ print(requests.get(test_url).json())
 # add_orders([2, 0.5, 20, ['11:00-13:30']]) passed
 # assign_orders(1) passed
 # complete_orders(1, 2, '2021-04-10T10:33:01.42Z') passed
-# did commit
+
+# committed
+
 # add_orders([3, 0.5, 13, ['11:00-13:30']]) passed
 # assign_orders(1) passed
 # complete_orders(1, 3, '2021-04-10T10:53:01.42Z') passed
-# get_courier(1) passed
 
-# 18.03.2021 17:26:14 - all functions work correctrly
-# ready for testing on virtual machine
+# committed
+
+# add_couriers([1, 'foot', [1, 12, 22], ['11:00-13:00', '18:00-22:00']])
+# edit_courier(1, ('regions', [13, 55]))
+# add_orders([9, 0.4, 13, ['12:00-12:30']])
+# assign_orders(1)
+# add_orders([10, 0.4, 13, ['12:00-12:30']], [11, 40, 13, ['12:00-12:30']])
+# assign_orders(1) passed
+# complete_orders(1, 9, '2021-03-18T18:22:12.680455Z') passed
+# assign_orders(1) passed
+# add_orders([12, 5, 13, ['12:00-12:30']], [13, 6, 13, ['12:00-12:30']]) passed
+# complete_orders(1, 10, '2021-03-18T21:24:23.680455Z') passed
+# assign_orders(1) passed
+# assign_orders(1) passed
+# complete_orders(1, 12, '2021-03-18T21:36:00.680455Z') passed
+
+# committed
+
+# add_couriers([1, 'foot', [1, 12, 22], ['11:00-13:00', '18:00-22:00']]) passed
+# edit_courier(1, ('regions', [13, 55])) passed
+# assign_orders(1) passed
+# complete_orders(1, 10, '2021-03-18T19:47:43.318541Z') passed
+# complete_orders(1, 13, '2021-03-18T19:48:43.318541Z') passed

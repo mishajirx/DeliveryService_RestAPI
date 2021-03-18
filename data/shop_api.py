@@ -26,7 +26,7 @@ kd = {10: 2, 15: 5, 50: 9}
 def is_t_ok(l1, l2) -> bool:
     # format HH:MM - HH:MM
     time = [0] * 1440
-    print(list(l1) + list(l2))
+    # print(list(l1) + list(l2))
     for h in list(l1) + list(l2):
         t = h.hours
         b1, b2 = t.split('-')
@@ -36,8 +36,8 @@ def is_t_ok(l1, l2) -> bool:
         b = int(b[0]) * 60 + int(b[1])
         time[a] += 1
         time[b + 1] -= 1
-        print(t, b1, b2, a, b, time[a], time[b + 1])
-    print('---------------------------')
+        # print(t, b1, b2, a, b, time[a], time[b + 1])
+    # print('---------------------------')
     balance = 0
     for i in time:
         balance += i
@@ -52,11 +52,14 @@ def add_couriers():
     db_sess = db_session.create_session()
     res = []
     bad_id = []
+    already_in_base = [i.id for i in db_sess.query(Courier).all()]
     is_ok = True
     for courier_info in req_json:
-        if set(dict(courier_info).keys()) != courier_fields:
+        print(set(dict(courier_info).keys()) != courier_fields, courier_info['courier_id'] in already_in_base)
+        if set(dict(courier_info).keys()) != courier_fields or courier_info['courier_id'] in already_in_base:
             is_ok = False
             bad_id.append({"id": int(courier_info['courier_id'])})
+        if not is_ok:
             continue
         courier = Courier()
         courier.id = courier_info['courier_id']
@@ -73,9 +76,9 @@ def add_couriers():
             db_sess.add(wh)
         db_sess.add(courier)
         res.append({"id": courier_info['courier_id']})
-    db_sess.commit()
 
     if is_ok:
+        db_sess.commit()
         return jsonify({"couriers": res}), 201
     return jsonify({"validation_error": bad_id}), 400
 
@@ -87,10 +90,13 @@ def add_orders():
     res = []
     bad_id = []
     is_ok = True
+    already_in_base = [i.id for i in db_sess.query(Order).all()]
     for order_info in req_json:
-        if set(dict(order_info).keys()) != order_fields or not 0.01 <= order_info['weight'] <= 50:
+        flag = set(dict(order_info).keys()) != order_fields
+        if flag or not 0.01 <= order_info['weight'] <= 50 or order_info['order_id'] in already_in_base:
             is_ok = False
             bad_id.append({"id": int(order_info['order_id'])})
+        if not is_ok:
             continue
         order = Order()
         order.id = order_info['order_id']
@@ -104,9 +110,9 @@ def add_orders():
             db_sess.add(dh)
         db_sess.add(order)
         res.append({"id": int(order_info['order_id'])})
-    db_sess.commit()
 
     if is_ok:
+        db_sess.commit()
         return jsonify({"orders": res}), 201
     return jsonify({"validation_error": bad_id}), 400
 
@@ -124,6 +130,11 @@ def edit_courier(courier_id):
                 courier.id = v
             elif k == 'type':
                 courier.maxw = c_type[v]
+                ords = db_sess.query(Order).filter(Order.orders_courier == courier_id).all()
+                for i in sorted(ords, key=lambda p: p.weight, reverse=True):
+                    if courier.currentw > courier.maxw:
+                        i.orders_courier = 0
+                        courier.currentw -= i.weight
             elif k == 'regions':
                 db_sess.query(Region).filter(Region.courier_id == courier.id).delete()
                 for i in v:
@@ -162,8 +173,8 @@ def edit_courier(courier_id):
         res['working_hours'] = a
         b = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()]
         res['regions'] = b
-        res['earnings'] = courier.amount_deliveries * 500 * kd[courier.maxw]
-        if not courier.amount_deliveries:
+        res['earnings'] = courier.earnings
+        if not courier.earnings:
             return jsonify(res), 201
         try:
             t = min([i.summa / i.q
@@ -180,34 +191,39 @@ def assign_orders():
     courier_id = request.json['courier_id']
     db_sess = db_session.create_session()
     courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
+    ords = db_sess.query(Order).filter(Order.orders_courier == courier_id, Order.complete_time == '').all()
+    if ords:
+        print('didnt all task')
+        res = [{'id': i.id} for i in ords]
+        return jsonify({'orders': res, 'assign_time': courier.last_assign_time}), 201
     courier_regions = [i.region for i in
                        db_sess.query(Region).filter(Region.courier_id == courier_id).all()]
     courier_wh = db_sess.query(WH).filter(WH.courier_id == courier_id).all()
     if not courier:
         abort(400)
 
-    ords = db_sess.query(Order).filter(
-        (Order.orders_courier == 0) | (Order.orders_courier == courier_id)
-    ).all()
-
-    for order in ords:
-        flag = is_t_ok(db_sess.query(DH).filter(DH.order_id == order.id).all(), courier_wh)
-        if order.region in courier_regions and flag:
+    ords = db_sess.query(Order).filter((Order.orders_courier == 0),  # | (Order.orders_courier == courier_id),
+                                       Order.region.in_(courier_regions)).all()
+    print(ords)
+    for order in sorted(ords, key=lambda x: x.weight):
+        if order.weight + courier.currentw > courier.maxw:
+            print(order.id, 'go out', courier.currentw)
+            break
+        if is_t_ok(db_sess.query(DH).filter(DH.order_id == order.id).all(), courier_wh):
             order.orders_courier = courier_id
+            courier.currentw += order.weight
 
     db_sess.commit()
 
     res = [{'id': order.id} for order in
-           db_sess.query(Order).filter(
-               Order.orders_courier == courier_id, '' == Order.complete_time
-           )
-           ]
+           db_sess.query(Order).filter(Order.orders_courier == courier_id, '' == Order.complete_time)]
     if not res:
-        return jsonify({"orders": res}), 200
+        return jsonify({"orders": []}), 200
+    courier.last_pack_cost = kd[courier.maxw] * 500
+    courier.last_assign_time = str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     assign_time = str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     if '' == courier.last_delivery_t:
         courier.last_delivery_t = assign_time
-    courier.amount_deliveries += 1
     db_sess.commit()
     return jsonify({"orders": res, 'assign_time': str(assign_time)}), 200
 
@@ -232,7 +248,12 @@ def complete_orders():
     v = datetime.datetime.fromisoformat(courier.last_delivery_t.split('.')[0])
     courier.last_delivery_t = complete_t
     reg.summa += (u - v).total_seconds()
+    if order.complete_time == '':
+        courier.currentw -= order.weight
     order.complete_time = complete_t
+    if not db_sess.query(Order).filter(Order.orders_courier == courier_id, Order.complete_time == '').all():
+        courier.earnings += courier.last_pack_cost
+        courier.last_pack_cost = 0
     db_sess.commit()
     return jsonify({'order_id': order.id}), 200
 
