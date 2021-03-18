@@ -72,11 +72,15 @@ print(requests.get(test_url).json())
 # add_orders([2, 0.5, 20, ['11:00-13:30']]) passed
 # assign_orders(1) passed
 # complete_orders(1, 2, '2021-04-10T10:33:01.42Z') passed
-# did commit
+
+# committed
+
 # add_orders([3, 0.5, 13, ['11:00-13:30']]) passed
 # assign_orders(1) passed
 # complete_orders(1, 3, '2021-04-10T10:53:01.42Z') passed
-# did comit
+
+# committed
+
 # add_couriers([1, 'foot', [1, 12, 22], ['11:00-13:00', '18:00-22:00']])
 # edit_courier(1, ('regions', [13, 55]))
 # add_orders([9, 0.4, 13, ['12:00-12:30']])
@@ -90,3 +94,11 @@ print(requests.get(test_url).json())
 # assign_orders(1) passed
 # assign_orders(1) passed
 # complete_orders(1, 12, '2021-03-18T21:36:00.680455Z') passed
+
+# committed
+
+# add_couriers([1, 'foot', [1, 12, 22], ['11:00-13:00', '18:00-22:00']]) passed
+# edit_courier(1, ('regions', [13, 55])) passed
+# assign_orders(1) passed
+# complete_orders(1, 10, '2021-03-18T19:47:43.318541Z') passed
+# complete_orders(1, 13, '2021-03-18T19:48:43.318541Z') passed

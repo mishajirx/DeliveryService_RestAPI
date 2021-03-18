@@ -218,12 +218,12 @@ def assign_orders():
     res = [{'id': order.id} for order in
            db_sess.query(Order).filter(Order.orders_courier == courier_id, '' == Order.complete_time)]
     if not res:
-        return jsonify({"orders": res}), 200
+        return jsonify({"orders": []}), 200
+    courier.last_pack_cost = kd[courier.maxw] * 500
     courier.last_assign_time = str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     assign_time = str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     if '' == courier.last_delivery_t:
         courier.last_delivery_t = assign_time
-    courier.earnings += kd[courier.maxw] * 500
     db_sess.commit()
     return jsonify({"orders": res, 'assign_time': str(assign_time)}), 200
 
@@ -251,6 +251,9 @@ def complete_orders():
     if order.complete_time == '':
         courier.currentw -= order.weight
     order.complete_time = complete_t
+    if not db_sess.query(Order).filter(Order.orders_courier == courier_id, Order.complete_time == '').all():
+        courier.earnings += courier.last_pack_cost
+        courier.last_pack_cost = 0
     db_sess.commit()
     return jsonify({'order_id': order.id}), 200
 
