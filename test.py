@@ -41,11 +41,11 @@ data = {
         }
     ]
 }
-print(requests.post(url, json=data).json())
+# print(requests.post(url, json=data).json())
 # edit courier
 url = 'http://127.0.0.1:5000/couriers/1'
 data = {
-    "regions": [22, 33, 2]
+    "working_hours": []
 }
 print(requests.patch(url, json=data).json())
 # assign orders
@@ -53,7 +53,7 @@ url = 'http://127.0.0.1:5000/orders/assign'
 data = {
     'courier_id': 1,
 }
-print(requests.post(url, json=data).json())
+# print(requests.post(url, json=data).json())
 # complete_orders
 url = 'http://127.0.0.1:5000/orders/complete'
 data = {
@@ -63,5 +63,5 @@ data = {
 }
 # print(requests.post(url, json=data).json())
 
-url = 'http://127.0.0.1:5000/couriers/3'
-# print(requests.get(url).json())
+url = 'http://127.0.0.1:5000/couriers/1'
+#print(requests.get(url).json())

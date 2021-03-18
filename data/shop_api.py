@@ -26,9 +26,9 @@ kd = {10: 2, 15: 5, 50: 9}
 def is_t_ok(l1, l2) -> bool:
     # format HH:MM - HH:MM
     time = [0] * 1440
+    print(list(l1) + list(l2))
     for h in list(l1) + list(l2):
         t = h.hours
-        # print(t)
         b1, b2 = t.split('-')
         a = b1.split(':')
         a = int(a[0]) * 60 + int(a[1])
@@ -36,6 +36,8 @@ def is_t_ok(l1, l2) -> bool:
         b = int(b[0]) * 60 + int(b[1])
         time[a] += 1
         time[b + 1] -= 1
+        print(t, b1, b2, a, b, time[a], time[b + 1])
+    print('---------------------------')
     balance = 0
     for i in time:
         balance += i
@@ -146,7 +148,6 @@ def edit_courier(courier_id):
         res['regions'] = b
         for i in db_sess.query(Order).filter(Order.orders_courier == courier_id).all():
             dh = db_sess.query(DH).filter(DH.order_id == i.id).all()
-            print('hghghghghg', i.region)
             if i.weight > courier.maxw or i.region not in res['regions'] or not is_t_ok(dh, a):
                 i.orders_courier = 0
         db_sess.commit()
@@ -175,22 +176,23 @@ def assign_orders():
     courier_id = request.json['courier_id']
     db_sess = db_session.create_session()
     courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
+    courier_regions = [i.region for i in
+                       db_sess.query(Region).filter(Region.courier_id == courier_id).all()]
+    courier_wh = db_sess.query(WH).filter(WH.courier_id == courier_id).all()
     if not courier:
         abort(400)
+
     ords = db_sess.query(Order).filter(
-        # график работы совпадает с графиком доставки
-        is_t_ok(db_sess.query(WH).filter(WH.courier_id == courier_id).all(),
-                db_sess.query(DH).filter(DH.order_id == Order.id).all()),
-        # регион подходит
-        Order.region.in_(
-            [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier_id).all()]
-        ),
         (Order.orders_courier == 0) | (Order.orders_courier == courier_id)
     ).all()
+
     for order in ords:
-        order.orders_courier = courier_id
-    print(ords)
+        flag = is_t_ok(db_sess.query(DH).filter(DH.order_id == order.id).all(), courier_wh)
+        if order.region in courier_regions and flag:
+            order.orders_courier = courier_id
+
     db_sess.commit()
+
     res = [{'id': order.id} for order in
            db_sess.query(Order).filter(
                Order.orders_courier == courier_id, '' == Order.complete_time
