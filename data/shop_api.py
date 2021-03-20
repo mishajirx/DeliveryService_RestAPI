@@ -21,6 +21,7 @@ order_fields = {'order_id', 'weight', 'region', 'delivery_hours'}
 c_type = {'foot': 10, 'bike': 15, 'car': 50}
 rev_c_type = {10: 'foot', 15: 'bike', 50: 'car'}
 kd = {10: 2, 15: 5, 50: 9}
+CODE = 'zhern0206eskiy'
 
 
 def is_t_ok(l1, l2) -> bool:
@@ -126,9 +127,7 @@ def edit_courier(courier_id):
         if not (set(req_json.keys()) <= courier_fields):
             abort(400)
         for k, v in dict(req_json).items():
-            if k == 'id':
-                courier.id = v
-            elif k == 'type':
+            if k == 'type':
                 courier.maxw = c_type[v]
                 ords = db_sess.query(Order).filter(Order.orders_courier == courier_id).all()
                 for i in sorted(ords, key=lambda p: p.weight, reverse=True):
@@ -159,13 +158,18 @@ def edit_courier(courier_id):
         res['regions'] = b
         for i in db_sess.query(Order).filter(Order.orders_courier == courier_id).all():
             dh = db_sess.query(DH).filter(DH.order_id == i.id).all()
-            if i.weight > courier.maxw or i.region not in res['regions'] or not is_t_ok(dh, a):
+            if i.complete_time:
+                continue
+            if i.weight + courier.currentw > courier.maxw or i.region not in res['regions'] or not is_t_ok(dh, a):
                 i.orders_courier = 0
+                courier.currentw -= i.weight
         db_sess.commit()
         return jsonify(res), 200
     elif request.method == 'GET':
         db_sess = db_session.create_session()
         courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
+        if not courier:
+            abort(400)
         res = {}
         res['courier_id'] = courier_id
         res['courier_type'] = rev_c_type[courier.maxw]
@@ -260,4 +264,18 @@ def complete_orders():
 
 @blueprint.route('/test', methods=['GET'])
 def test():
-    return jsonify({"a": 2}), 201
+    return jsonify({"test": 'connection is here'}), 201
+
+
+@blueprint.route('/clear', methods=['POST'])
+def clear():
+    if request.json['code'] != CODE:
+        return jsonify({"error": "wrong code"}), 400
+    db_sess = db_session.create_session()
+    db_sess.query(Courier).delete()
+    db_sess.query(Order).delete()
+    db_sess.query(Region).delete()
+    db_sess.query(WH).delete()
+    db_sess.query(DH).delete()
+    db_sess.commit()
+    return jsonify({'status': 'all data cleared'}), 201
