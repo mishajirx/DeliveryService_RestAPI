@@ -1,6 +1,8 @@
 import datetime
 import requests
 
+HOST = '127.0.0.1'
+
 
 def add_couriers(*args):
     data = {'data': []}
@@ -8,8 +10,11 @@ def add_couriers(*args):
         x = {}
         x['courier_id'], x['courier_type'], x['regions'], x['working_hours'] = i
         data['data'].append(x)
-    url = 'http://127.0.0.1:5000/couriers'
-    print(requests.post(url, json=data).json())
+    url = f'http://{HOST}:8080/couriers'
+    response = requests.post(url, json=data)
+    if not response:
+        print(response)
+    print(response, response.json())
 
 
 def add_orders(*args):
@@ -18,25 +23,34 @@ def add_orders(*args):
         x = {}
         x['order_id'], x['weight'], x['region'], x['delivery_hours'] = i
         data['data'].append(x)
-    url = 'http://127.0.0.1:5000/orders'
-    print(requests.post(url, json=data).json())
+    url = f'http://{HOST}:8080/orders'
+    response = requests.post(url, json=data)
+    if not response:
+        print(response)
+    print(response, response.json())
 
 
 def edit_courier(c, *args):
-    url = 'http://127.0.0.1:5000/couriers/' + str(c)
+    url = f'http://{HOST}:8080/couriers/' + str(c)
     data = {}
     for k, v in args:
         data[k] = v
-    print(requests.patch(url, json=data).json())
+    response = requests.patch(url, json=data)
+    if not response:
+        print(response)
+    print(response, response.json())
 
 
 def get_courier(c):
-    url = 'http://127.0.0.1:5000/couriers/' + str(c)
-    print(requests.get(url).json())
+    url = f'http://{HOST}:8080/couriers/' + str(c)
+    response = requests.get(url)
+    if not response:
+        print(response)
+    print(response, response.json())
 
 
 def assign_orders(c_id):
-    url = 'http://127.0.0.1:5000/orders/assign'
+    url = f'http://{HOST}:8080/orders/assign'
     data = {
         'courier_id': c_id
     }
@@ -44,7 +58,7 @@ def assign_orders(c_id):
 
 
 def complete_orders(c_id, o_id, complete_t):
-    url = 'http://127.0.0.1:5000/orders/complete'
+    url = f'http://{HOST}:8080/orders/complete'
     data = {
         'courier_id': c_id,
         'order_id': o_id,
@@ -53,7 +67,7 @@ def complete_orders(c_id, o_id, complete_t):
     print(requests.post(url, json=data).json())
 
 
-test_url = 'http://127.0.0.1:5000/test'
+test_url = f'http://{HOST}:8080/test'
 print(requests.get(test_url).json())
 
 # add_couriers([1, 'foot', [1, 12, 22], ['11:00-13:00', '18:00-22:00']]) passed
@@ -102,3 +116,6 @@ print(requests.get(test_url).json())
 # assign_orders(1) passed
 # complete_orders(1, 10, '2021-03-18T19:47:43.318541Z') passed
 # complete_orders(1, 13, '2021-03-18T19:48:43.318541Z') passed
+
+# committed
+# add_couriers([1, 'foot', [1, 2, 3], ['16:00-18:00']]) passed
