@@ -39,8 +39,9 @@ def get_courier(courier_id):
         print(response, response.json())
 
 
-def assign_orders(data):
+def assign_orders(courier_id):
     url = f'http://{HOST}:8080/orders/assign'
+    data = {'courier_id': courier_id}
     response = requests.post(url, json=data)
     if not response:
         print(response)
@@ -48,7 +49,7 @@ def assign_orders(data):
         print(response, response.json())
 
 
-def complete_orders(data, complete_t):
+def complete_orders(data):
     url = f'http://{HOST}:8080/orders/complete'
     response = requests.post(url, json=data)
     if not response:
@@ -224,6 +225,7 @@ add_couriers({
         }
     ]
 })  # отсутствие поля (ошибка)
+
 edit_courier(1, {
     "regions": [11, 33, 2],
     "working_hours": ['12:00-12:30'],
@@ -236,6 +238,7 @@ edit_courier(1, {
 edit_courier(1, {
     'bar': 123
 })  # изменение несуществующего параметра (ошибка)
+
 add_orders({
     "data": [
         {
@@ -368,3 +371,37 @@ add_orders({
         }
     ]
 })  # слишком маленький вес (ошибка)
+
+assign_orders(1)  # назначение заказов курьеру 1 (нормальные данные)
+assign_orders(1)  # назначение заказов курьеру 1 (нормальные данные) доказываем идемпотентность
+assign_orders(2)  # назначение заказов курьеру 2 (нормальные данные)
+assign_orders(2)  # назначение заказов курьеру 2 (нормальные данные) доказываем идемпотентность
+assign_orders(3)  # назначение заказов курьеру 3 (нормальные данные)
+assign_orders(3)  # назначение заказов курьеру 1 (нормальные данные) доказываем идемпотентность
+assign_orders(4)  # назначение заказов курьеру 3 (ошибка)
+
+complete_orders({
+    "courier_id": 2,
+    "order_id": 3,
+    "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
+})  # выполнение курьером 2 заказа 3 (нормальные данные)
+complete_orders({
+    "courier_id": 2,
+    "order_id": 3,
+    "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
+})  # выполнение курьером 2 заказа 3 (нормальные данные) доказываем идемпотентность
+complete_orders({
+    "courier_id": 1,
+    "order_id": 3,
+    "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
+})  # выполнение курьером 1 заказа 3 (ошибка)
+complete_orders({
+    "courier_id": 2,
+    "order_id": 1,
+    "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
+})  # выполнение курьером 2 заказа 1 (ошибка)
+complete_orders({
+    "courier_id": 4,
+    "order_id": 5,
+    "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
+})  # выполнение курьером 4 заказа 5 (ошибка)
