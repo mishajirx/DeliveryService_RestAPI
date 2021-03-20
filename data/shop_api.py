@@ -260,4 +260,4 @@ def complete_orders():
 
 @blueprint.route('/test', methods=['GET'])
 def test():
-    return jsonify({"a": 2}), 201
+    return jsonify({"test": 'connection is here'}), 201
