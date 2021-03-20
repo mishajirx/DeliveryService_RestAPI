@@ -133,5 +133,106 @@ def clear_db(data):
 args = parser.parse_args()
 test_connection()
 if args.clear[0] == '1':
-    code = input('write password to access you clear data: ')
+    code = 'zhern0206eskiy'
+    #code = input('write password to access you clear data: ')
     clear_db({'code': code})
+add_couriers({
+    "data": [
+        {
+            "courier_id": 1,
+            "courier_type": "foot",
+            "regions": [1, 12, 22],
+            "working_hours": ["11:35-14:05", "09:00-11:00"]
+        },
+        {
+            "courier_id": 2,
+            "courier_type": "bike",
+            "regions": [22],
+            "working_hours": ["09:00-18:00"]
+        },
+        {
+            "courier_id": 3,
+            "courier_type": "car",
+            "regions": [12, 22, 23, 33],
+            "working_hours": []
+        }
+    ]
+})  # добавление курьеров (нормальные данные)
+add_couriers({
+    "data": [
+        {
+            "courier_id": 1,
+            "courier_type": "foot",
+            "regions": [1, 12, 22],
+            "working_hours": ["11:35-14:05", "09:00-11:00"]
+        },
+        {
+            "courier_id": 2,
+            "courier_type": "bike",
+            "regions": [22],
+            "working_hours": ["09:00-18:00"]
+        },
+        {
+            "courier_id": 3,
+            "courier_type": "car",
+            "regions": [12, 22, 23, 33],
+            "working_hours": []
+        }
+    ]
+})  # повторение айдишников (ошибка)
+add_couriers({
+    "data": [
+        {
+            "courier_id": 5,
+            "courier_type": "foot",
+            "regions": [1, 12, 22],
+            "working_hours": ["11:35-14:05", "09:00-11:00"]
+        },
+        {
+            "courier_id": 7,
+            "courier_type": "bike",
+            "regions": [22],
+            "working_hours": ["09:00-18:00"]
+        },
+        {
+            "courier_id": 9,
+            "courier_type": "car",
+            "regions": [12, 22, 23, 33],
+            "working_hours": [],
+            "foo": 2
+        }
+    ]
+})  # несуществующее поле (ошибка)
+add_couriers({
+    "data": [
+        {
+            "courier_id": 5,
+            "courier_type": "foot",
+            "regions": [1, 12, 22],
+            "working_hours": ["11:35-14:05", "09:00-11:00"]
+        },
+        {
+            "courier_id": 7,
+            "courier_type": "bike",
+            "working_hours": ["09:00-18:00"]
+        },
+        {
+            "courier_id": 9,
+            "courier_type": "car",
+            "regions": [12, 22, 23, 33],
+            "working_hours": [],
+        }
+    ]
+})  # отсутствие поля (ошибка)
+edit_courier(1, {
+    "regions": [11, 33, 2],
+    "working_hours": ['12:00-12:30'],
+    'courier_type': 'car'
+})  # изменение всех параметров (нормальные данные)
+edit_courier(1, {
+    "regions": [11, 2],
+    "working_hours": ['11:00-15:30'],
+})  # изменение не всех параметров (нормальные данные)
+edit_courier(1, {
+    'bar': 123
+})  # изменение несуществующего параметра (ошибка)

@@ -127,9 +127,7 @@ def edit_courier(courier_id):
         if not (set(req_json.keys()) <= courier_fields):
             abort(400)
         for k, v in dict(req_json).items():
-            if k == 'id':
-                courier.id = v
-            elif k == 'type':
+            if k == 'type':
                 courier.maxw = c_type[v]
                 ords = db_sess.query(Order).filter(Order.orders_courier == courier_id).all()
                 for i in sorted(ords, key=lambda p: p.weight, reverse=True):
