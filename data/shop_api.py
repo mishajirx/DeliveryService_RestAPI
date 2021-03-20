@@ -21,6 +21,7 @@ order_fields = {'order_id', 'weight', 'region', 'delivery_hours'}
 c_type = {'foot': 10, 'bike': 15, 'car': 50}
 rev_c_type = {10: 'foot', 15: 'bike', 50: 'car'}
 kd = {10: 2, 15: 5, 50: 9}
+CODE = 'zhern0206eskiy'
 
 
 def is_t_ok(l1, l2) -> bool:
@@ -261,3 +262,16 @@ def complete_orders():
 @blueprint.route('/test', methods=['GET'])
 def test():
     return jsonify({"test": 'connection is here'}), 201
+
+
+@blueprint.route('/clear', methods=['POST'])
+def clear():
+    if request.json['code'] != CODE:
+        return jsonify({"error": "wrong code"}), 400
+    db_sess = db_session.create_session()
+    db_sess.query(Courier).all().delete()
+    db_sess.query(Order).all().delete()
+    db_sess.query(Region).all().delete()
+    db_sess.query(WH).all().delete()
+    db_sess.query(DH).all().delete()
+    return jsonify({'status': 'all data cleared'}), 201

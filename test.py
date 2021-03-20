@@ -1,7 +1,11 @@
 import datetime
+import argparse
 import requests
 
 HOST = '127.0.0.1'
+parser = argparse.ArgumentParser(  # объект обрабатывающий аргументы(как в функции)
+    description="convert integers to decimal system")
+parser.add_argument('--clear', default='0', type=str, help='need to delete all data?(yes(1)/no(0))')
 
 
 # methods for comfortable testing
@@ -39,12 +43,18 @@ def get_courier(courier_id):
 
 def assign_orders(data):
     url = f'http://{HOST}:8080/orders/assign'
-    print(requests.post(url, json=data).json())
+    response = requests.post(url, json=data)
+    if not response:
+        print(response)
+    print(response, response.json())
 
 
 def complete_orders(data, complete_t):
     url = f'http://{HOST}:8080/orders/complete'
-    print(requests.post(url, json=data).json())
+    response = requests.post(url, json=data)
+    if not response:
+        print(response)
+    print(response, response.json())
 
 
 def test_connection():
@@ -59,6 +69,14 @@ def test_connection():
         print('Something went wrong: Connection Error')
         print('Try to rerun service')
         exit(0)
+
+
+def clear_db(data):
+    url = f'http://{HOST}:8080/orders/clear'
+    response = requests.post(url, json=data)
+    if not response:
+        print(response)
+    print(response, response.json())
 
 
 """TEST HISTORY"""
@@ -110,8 +128,12 @@ def test_connection():
 # complete_orders(1, 13, '2021-03-18T19:48:43.318541Z') passed
 
 # COMMITTED
+
 # add_couriers([1, 'foot', [1, 2, 3], ['16:00-18:00']]) passed
 
 # COMMITTED - new testing system. Now need to give all data dictionary
-
-
+args = parser.parse_args()
+test_connection()
+if args.clear[0] == '1':
+    code = input('write password to access you clear data: ')
+    clear_db({'code': code})
