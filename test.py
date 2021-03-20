@@ -136,8 +136,7 @@ def clear_db(data):
 args = parser.parse_args()
 test_connection()
 if args.clear[0] == '1':
-    code = 'zhern0206eskiy'
-    # code = input('write password to access you clear data: ')
+    code = input('write password to access you clear data: ')
     clear_db({'code': code})
 add_couriers({
     "data": [
