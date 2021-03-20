@@ -448,3 +448,40 @@ complete_orders({
     "order_id": 4,
     "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
 })  # заказ больше не его (ошибка)
+
+"""Тест на то что нельзя забрать уже назначенный заказ"""
+
+add_couriers({
+    "data": [
+        {
+            "courier_id": 6,
+            "courier_type": "bike",
+            "regions": [40],
+            "working_hours": ["13:00-13:50"]
+        },
+        {
+            "courier_id": 7,
+            "courier_type": "bike",
+            "regions": [40],
+            "working_hours": ["13:00-13:50"]
+        }
+    ]
+})  # создадим двух одинаковых курьеров
+add_orders({
+    "data": [
+        {
+            "order_id": 8,
+            "weight": 10,
+            "region": 40,
+            "delivery_hours": ["13:30-13:41"]
+        }
+    ]
+})  # добавим подходящий им заказ
+assign_orders(6)  # один его получит
+assign_orders(7)  # второй нет
+complete_orders({
+    "courier_id": 6,
+    "order_id": 8,
+    "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
+})  # выполняет заказ
+assign_orders(7)  # второй также не может получить его
