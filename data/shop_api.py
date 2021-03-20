@@ -165,6 +165,8 @@ def edit_courier(courier_id):
     elif request.method == 'GET':
         db_sess = db_session.create_session()
         courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
+        if not courier:
+            abort(400)
         res = {}
         res['courier_id'] = courier_id
         res['courier_type'] = rev_c_type[courier.maxw]

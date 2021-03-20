@@ -405,3 +405,8 @@ complete_orders({
     "order_id": 5,
     "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
 })  # выполнение курьером 4 заказа 5 (ошибка)
+
+get_courier(1)  # информация о курьере 1 (нормальные данные)
+get_courier(2)  # информация о курьере 2 (нормальные данные)
+get_courier(3)  # информация о курьере 3 (нормальные данные)
+get_courier(4)  # информация о курьере 4 (ошибка)
