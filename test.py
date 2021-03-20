@@ -12,16 +12,12 @@ parser.add_argument('--clear', default='0', type=str, help='need to delete all d
 def add_couriers(data):
     url = f'http://{HOST}:8080/couriers'
     response = requests.post(url, json=data)
-    if not response:
-        print(response)
-    print(response, response.json())
+    (response, response.json())
 
 
 def add_orders(data):
     url = f'http://{HOST}:8080/orders'
     response = requests.post(url, json=data)
-    if not response:
-        print(response)
     print(response, response.json())
 
 
@@ -30,7 +26,8 @@ def edit_courier(courier_id, data):
     response = requests.patch(url, json=data)
     if not response:
         print(response)
-    print(response, response.json())
+    else:
+        print(response, response.json())
 
 
 def get_courier(courier_id):
@@ -38,7 +35,8 @@ def get_courier(courier_id):
     response = requests.get(url)
     if not response:
         print(response)
-    print(response, response.json())
+    else:
+        print(response, response.json())
 
 
 def assign_orders(data):
@@ -46,7 +44,8 @@ def assign_orders(data):
     response = requests.post(url, json=data)
     if not response:
         print(response)
-    print(response, response.json())
+    else:
+        print(response, response.json())
 
 
 def complete_orders(data, complete_t):
@@ -54,7 +53,8 @@ def complete_orders(data, complete_t):
     response = requests.post(url, json=data)
     if not response:
         print(response)
-    print(response, response.json())
+    else:
+        print(response, response.json())
 
 
 def test_connection():
@@ -72,10 +72,8 @@ def test_connection():
 
 
 def clear_db(data):
-    url = f'http://{HOST}:8080/orders/clear'
+    url = f'http://{HOST}:8080/clear'
     response = requests.post(url, json=data)
-    if not response:
-        print(response)
     print(response, response.json())
 
 

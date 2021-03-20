@@ -269,9 +269,10 @@ def clear():
     if request.json['code'] != CODE:
         return jsonify({"error": "wrong code"}), 400
     db_sess = db_session.create_session()
-    db_sess.query(Courier).all().delete()
-    db_sess.query(Order).all().delete()
-    db_sess.query(Region).all().delete()
-    db_sess.query(WH).all().delete()
-    db_sess.query(DH).all().delete()
+    db_sess.query(Courier).delete()
+    db_sess.query(Order).delete()
+    db_sess.query(Region).delete()
+    db_sess.query(WH).delete()
+    db_sess.query(DH).delete()
+    db_sess.commit()
     return jsonify({'status': 'all data cleared'}), 201
