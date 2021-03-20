@@ -134,7 +134,7 @@ args = parser.parse_args()
 test_connection()
 if args.clear[0] == '1':
     code = 'zhern0206eskiy'
-    #code = input('write password to access you clear data: ')
+    # code = input('write password to access you clear data: ')
     clear_db({'code': code})
 add_couriers({
     "data": [
@@ -236,3 +236,135 @@ edit_courier(1, {
 edit_courier(1, {
     'bar': 123
 })  # изменение несуществующего параметра (ошибка)
+add_orders({
+    "data": [
+        {
+            "order_id": 1,
+            "weight": 0.23,
+            "region": 12,
+            "delivery_hours": ["09:00-18:00"]
+        },
+        {
+            "order_id": 2,
+            "weight": 15,
+            "region": 1,
+            "delivery_hours": ["09:00-18:00"]
+        },
+        {
+            "order_id": 3,
+            "weight": 0.01,
+            "region": 22,
+            "delivery_hours": ["09:00-12:00", "16:00-21:30"]
+        }
+    ]
+})  # добавление заказов (нормальные данные)
+add_orders({
+    "data": [
+        {
+            "order_id": 5,
+            "weight": 0.23,
+            "region": 12,
+            "delivery_hours": ["09:00-18:00"]
+        },
+        {
+            "order_id": 8,
+            "weight": 15,
+            "region": 1,
+            "delivery_hours": ["09:00-18:00"]
+        },
+        {
+            "order_id": 3,
+            "weight": 0.01,
+            "region": 22,
+            "delivery_hours": ["09:00-12:00", "16:00-21:30"]
+        }
+    ]
+})  # повторение айди (ошибка)
+add_orders({
+    "data": [
+        {
+            "order_id": 1,
+            "weight": 0.23,
+            "region": 12,
+            "delivery_hours": ["09:00-18:00"],
+            "fjhfbgudrgbdiu": 123
+        },
+        {
+            "order_id": 2,
+            "weight": 15,
+            "region": 1,
+            "delivery_hours": ["09:00-18:00"]
+        },
+        {
+            "order_id": 3,
+            "weight": 0.01,
+            "region": 22,
+            "delivery_hours": ["09:00-12:00", "16:00-21:30"]
+        }
+    ]
+})  # несуществующее поле (ошибка)
+add_orders({
+    "data": [
+        {
+            "order_id": 16,
+            "weight": 0.23,
+            "region": 12,
+            "delivery_hours": ["09:00-18:00"]
+        },
+        {
+            "order_id": 8,
+            "weight": 15,
+            "delivery_hours": ["09:00-18:00"]
+        },
+        {
+            "order_id": 10,
+            "weight": 0.01,
+            "region": 22,
+            "delivery_hours": ["09:00-12:00", "16:00-21:30"]
+        }
+    ]
+})  # отсутствие поля (ошибка)
+add_orders({
+    "data": [
+        {
+            "order_id": 10,
+            "weight": 100,
+            "region": 12,
+            "delivery_hours": ["09:00-18:00"]
+        },
+        {
+            "order_id": 11,
+            "weight": 15,
+            "region": 1,
+            "delivery_hours": ["09:00-18:00"]
+        },
+        {
+            "order_id": 12,
+            "weight": 0.01,
+            "region": 22,
+            "delivery_hours": ["09:00-12:00", "16:00-21:30"]
+        }
+    ]
+})  # слишком большой вес (ошибка)
+add_orders({
+    "data": [
+        {
+            "order_id": 10,
+            "weight": 0.00001,
+            "region": 12,
+            "delivery_hours": ["09:00-18:00"]
+        },
+        {
+            "order_id": 11,
+            "weight": 15,
+            "region": 1,
+            "delivery_hours": ["09:00-18:00"]
+        },
+        {
+            "order_id": 12,
+            "weight": 0.01,
+            "region": 22,
+            "delivery_hours": ["09:00-12:00", "16:00-21:30"]
+        }
+    ]
+})  # слишком маленький вес (ошибка)
