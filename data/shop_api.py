@@ -56,7 +56,7 @@ def add_couriers():
     already_in_base = [i.id for i in db_sess.query(Courier).all()]
     is_ok = True
     for courier_info in req_json:
-        print(set(dict(courier_info).keys()) != courier_fields, courier_info['courier_id'] in already_in_base)
+        # print(set(dict(courier_info).keys()) != courier_fields, courier_info['courier_id'] in already_in_base)
         if set(dict(courier_info).keys()) != courier_fields or courier_info['courier_id'] in already_in_base:
             is_ok = False
             bad_id.append({"id": int(courier_info['courier_id'])})
@@ -197,7 +197,7 @@ def assign_orders():
     courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
     ords = db_sess.query(Order).filter(Order.orders_courier == courier_id, Order.complete_time == '').all()
     if ords:
-        print('didnt all task')
+        # print('didnt all task')
         res = [{'id': i.id} for i in ords]
         return jsonify({'orders': res, 'assign_time': courier.last_assign_time}), 201
     courier_regions = [i.region for i in
@@ -208,10 +208,10 @@ def assign_orders():
 
     ords = db_sess.query(Order).filter((Order.orders_courier == 0),  # | (Order.orders_courier == courier_id),
                                        Order.region.in_(courier_regions)).all()
-    print(ords)
+    # print(ords)
     for order in sorted(ords, key=lambda x: x.weight):
         if order.weight + courier.currentw > courier.maxw:
-            print(order.id, 'go out', courier.currentw)
+            # print(order.id, 'go out', courier.currentw)
             break
         if is_t_ok(db_sess.query(DH).filter(DH.order_id == order.id).all(), courier_wh):
             order.orders_courier = courier_id
