@@ -5,18 +5,23 @@
 1. Перейти в командной строке в каталог с проектом
 2. выполнить pip install -r requirements.txt
 #### Пример ####
-/home/YandexBackend $ pip install -r requirements.txt
+$ pip install -r requirements.txt
 ## Запуск приложения ##
 Для запуска приложения нужно просто выполнить в консоли
 python3 main.py (или python main.py)
 #### Пример #### 
-/home/YandexBackend $ python3 main.py
+$ python3 main.py
 
 ## Запуск Тестов ##
-Для запуска тестов нужно выполнить test.py
-(и указать в параметре clear 1, если нужно очистить базу данных, иначе 0)
-Также нужно ввести пароль (zhern0206eskiy)
+Для запуска тестов нужно:
+1. Повторить пункты из раздела "Запуск приложения"
+2. Нажать ctrl+z. Выполнить bg
+3. выполнить test.py (и указать в параметре clear 1, если нужно очистить базу данных, иначе 0)
+4. Также нужно ввести пароль (zhern0206eskiy)
 #### Пример: ####
-/home/YandexBackend $ python3 test.py --clear 1
+$ python3 main.py
+$ ^Z
+& bg
+$ python3 test.py --clear 1
 
 Читать описание тестов и параллельно следить за результатом.
