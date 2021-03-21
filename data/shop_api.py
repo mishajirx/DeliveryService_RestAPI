@@ -158,13 +158,18 @@ def edit_courier(courier_id):
         res['regions'] = b
         for i in db_sess.query(Order).filter(Order.orders_courier == courier_id).all():
             dh = db_sess.query(DH).filter(DH.order_id == i.id).all()
-            if i.weight > courier.maxw or i.region not in res['regions'] or not is_t_ok(dh, a):
+            if i.complete_time:
+                continue
+            if i.weight + courier.currentw > courier.maxw or i.region not in res['regions'] or not is_t_ok(dh, a):
                 i.orders_courier = 0
+                courier.currentw -= i.weight
         db_sess.commit()
         return jsonify(res), 200
     elif request.method == 'GET':
         db_sess = db_session.create_session()
         courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
+        if not courier:
+            abort(400)
         res = {}
         res['courier_id'] = courier_id
         res['courier_type'] = rev_c_type[courier.maxw]

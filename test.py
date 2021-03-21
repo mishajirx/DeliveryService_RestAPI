@@ -131,6 +131,8 @@ def clear_db(data):
 # add_couriers([1, 'foot', [1, 2, 3], ['16:00-18:00']]) passed
 
 # COMMITTED - new testing system. Now need to give all data dictionary
+
+""" Основные тесты"""
 args = parser.parse_args()
 test_connection()
 if args.clear[0] == '1':
@@ -155,7 +157,7 @@ add_couriers({
             "courier_id": 3,
             "courier_type": "car",
             "regions": [12, 22, 23, 33],
-            "working_hours": []
+            "working_hours": ['22:00-22:30']
         }
     ]
 })  # добавление курьеров (нормальные данные)
@@ -405,3 +407,81 @@ complete_orders({
     "order_id": 5,
     "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
 })  # выполнение курьером 4 заказа 5 (ошибка)
+
+get_courier(1)  # информация о курьере 1 (нормальные данные)
+get_courier(2)  # информация о курьере 2 (нормальные данные)
+get_courier(3)  # информация о курьере 3 (нормальные данные)
+get_courier(4)  # информация о курьере 4 (ошибка)
+
+""" Тест на то что при изменение данных о курьере заказ может стать свободным """
+
+add_orders({
+    "data": [
+        {
+            "order_id": 4,
+            "weight": 40,
+            "region": 22,
+            "delivery_hours": ["22:00-22:15"]
+        }
+    ]
+})  # добавили заказ с весом 40 (норм)
+assign_orders(3)  # назначили его курьеру на машине (норм)
+edit_courier(3, {'courier_type': 'foot'})  # он поменял тип (норм)
+complete_orders({
+    "courier_id": 3,
+    "order_id": 4,
+    "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
+})  # заказ больше не его (ошибка)
+edit_courier(3, {'courier_type': 'car'})  # меняем обратно (ок)
+assign_orders(3)  # назначили его курьеру с подходящим временем (ок)
+edit_courier(3, {'working_hours': ['12:00-13:00']})  # он поменял рабочее время (ок)
+complete_orders({
+    "courier_id": 3,
+    "order_id": 4,
+    "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
+})  # заказ больше не его (ошибка)
+edit_courier(3, {'working_hours': ['22:00-22:30']})  # меняем обратно (ок)
+assign_orders(3)  # назначили его курьеру с подходящим регионом (ок)
+edit_courier(3, {'regions': [1]})  # он поменял рабочее время (ок)
+complete_orders({
+    "courier_id": 3,
+    "order_id": 4,
+    "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
+})  # заказ больше не его (ошибка)
+
+"""Тест на то что нельзя забрать уже назначенный заказ"""
+
+add_couriers({
+    "data": [
+        {
+            "courier_id": 6,
+            "courier_type": "bike",
+            "regions": [40],
+            "working_hours": ["13:00-13:50"]
+        },
+        {
+            "courier_id": 7,
+            "courier_type": "bike",
+            "regions": [40],
+            "working_hours": ["13:00-13:50"]
+        }
+    ]
+})  # создадим двух одинаковых курьеров
+add_orders({
+    "data": [
+        {
+            "order_id": 8,
+            "weight": 10,
+            "region": 40,
+            "delivery_hours": ["13:30-13:41"]
+        }
+    ]
+})  # добавим подходящий им заказ
+assign_orders(6)  # один его получит
+assign_orders(7)  # второй нет
+complete_orders({
+    "courier_id": 6,
+    "order_id": 8,
+    "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
+})  # выполняет заказ
+assign_orders(7)  # второй также не может получить его
