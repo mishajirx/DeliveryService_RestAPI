@@ -2,8 +2,8 @@ import datetime
 import argparse
 import requests
 
-HOST = '0.0.0.0'
-# HOST = '127.0.0.1'
+# HOST = '0.0.0.0'
+HOST = '127.0.0.1'
 parser = argparse.ArgumentParser(  # объект обрабатывающий аргументы(как в функции)
     description="convert integers to decimal system")
 parser.add_argument('--clear', default='0', type=str, help='need to delete all data?(yes(1)/no(0))')
@@ -137,7 +137,8 @@ def clear_db(data):
 args = parser.parse_args()
 test_connection()
 if args.clear[0] == '1':
-    code = input('write password to access you clear data: ')
+    code = 'zhern0206eskiy'
+    # code = input('write password to access you clear data: ')
     clear_db({'code': code})
 add_couriers({
     "data": [

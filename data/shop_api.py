@@ -1,15 +1,17 @@
 import datetime
 
-import flask
+import flask, pydantic
 from flask import jsonify, abort, request, Blueprint
 from sqlite3 import connect
-
 from data import db_session
 from data.couriers import Courier
 from data.orders import Order
 from data.regions import Region
 from data.workinghours import WH
 from data.deliveryhours import DH
+from typing import List, Optional
+
+from pydantic import validator
 
 blueprint = Blueprint(
     'shop_api',
@@ -22,6 +24,42 @@ c_type = {'foot': 10, 'bike': 15, 'car': 50}
 rev_c_type = {10: 'foot', 15: 'bike', 50: 'car'}
 kd = {10: 2, 15: 5, 50: 9}
 CODE = 'zhern0206eskiy'
+
+
+class CourierModel(pydantic.BaseModel):
+    courier_id: int
+    courier_type: str
+    regions: List[int]
+    working_hours: List[str]
+
+    class Config:
+        extra = 'forbid'
+
+
+class EditCourierModel(pydantic.BaseModel):
+    courier_id: Optional[int]
+    courier_type: Optional[str]
+    regions: Optional[List[int]]
+    working_hours: Optional[List[str]]
+
+    class Config:
+        extra = 'forbid'
+
+
+class OrderModel(pydantic.BaseModel):
+    order_id: int
+    weight: float
+    region: int
+    delivery_hours: List[str]
+
+    class Config:
+        extra = 'forbid'
+
+    @validator('weight')
+    def weight_should_be(cls, w: float):
+        if not 0.1 <= w <= 50:
+            raise ValueError('bad value, ' + str(w))
+        return w
 
 
 def is_t_ok(l1, l2) -> bool:
@@ -56,8 +94,13 @@ def add_couriers():
     already_in_base = [i.id for i in db_sess.query(Courier).all()]
     is_ok = True
     for courier_info in req_json:
-        # print(set(dict(courier_info).keys()) != courier_fields, courier_info['courier_id'] in already_in_base)
-        if set(dict(courier_info).keys()) != courier_fields or courier_info['courier_id'] in already_in_base:
+        flag = False
+        try:
+            CourierModel(**courier_info)
+        except pydantic.ValidationError as e:
+            print(e.json())
+            flag = True
+        if flag or courier_info['courier_id'] in already_in_base:
             is_ok = False
             bad_id.append({"id": int(courier_info['courier_id'])})
         if not is_ok:
@@ -93,7 +136,12 @@ def add_orders():
     is_ok = True
     already_in_base = [i.id for i in db_sess.query(Order).all()]
     for order_info in req_json:
-        flag = set(dict(order_info).keys()) != order_fields
+        flag = False
+        try:
+            OrderModel(**order_info)
+        except pydantic.ValidationError as e:
+            print(e.json())
+            flag = True
         if flag or not 0.01 <= order_info['weight'] <= 50 or order_info['order_id'] in already_in_base:
             is_ok = False
             bad_id.append({"id": int(order_info['order_id'])})
@@ -124,7 +172,13 @@ def edit_courier(courier_id):
         req_json = request.json
         db_sess = db_session.create_session()
         courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
-        if not (set(req_json.keys()) <= courier_fields):
+        flag = False
+        try:
+            EditCourierModel(**req_json)
+        except pydantic.ValidationError as e:
+            print(e.json())
+            flag = True
+        if flag or not courier:
             abort(400)
         for k, v in dict(req_json).items():
             if k == 'type':
@@ -160,7 +214,8 @@ def edit_courier(courier_id):
             dh = db_sess.query(DH).filter(DH.order_id == i.id).all()
             if i.complete_time:
                 continue
-            if i.weight + courier.currentw > courier.maxw or i.region not in res['regions'] or not is_t_ok(dh, a):
+            if i.weight + courier.currentw > courier.maxw or i.region not in res[
+                'regions'] or not is_t_ok(dh, a):
                 i.orders_courier = 0
                 courier.currentw -= i.weight
         db_sess.commit()
@@ -195,7 +250,8 @@ def assign_orders():
     courier_id = request.json['courier_id']
     db_sess = db_session.create_session()
     courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
-    ords = db_sess.query(Order).filter(Order.orders_courier == courier_id, Order.complete_time == '').all()
+    ords = db_sess.query(Order).filter(Order.orders_courier == courier_id,
+                                       Order.complete_time == '').all()
     if ords:
         # print('didnt all task')
         res = [{'id': i.id} for i in ords]
@@ -206,7 +262,8 @@ def assign_orders():
     if not courier:
         abort(400)
 
-    ords = db_sess.query(Order).filter((Order.orders_courier == 0),  # | (Order.orders_courier == courier_id),
+    ords = db_sess.query(Order).filter((Order.orders_courier == 0),
+                                       # | (Order.orders_courier == courier_id),
                                        Order.region.in_(courier_regions)).all()
     # print(ords)
     for order in sorted(ords, key=lambda x: x.weight):
@@ -220,7 +277,8 @@ def assign_orders():
     db_sess.commit()
 
     res = [{'id': order.id} for order in
-           db_sess.query(Order).filter(Order.orders_courier == courier_id, '' == Order.complete_time)]
+           db_sess.query(Order).filter(Order.orders_courier == courier_id,
+                                       '' == Order.complete_time)]
     if not res:
         return jsonify({"orders": []}), 200
     courier.last_pack_cost = kd[courier.maxw] * 500
@@ -255,7 +313,8 @@ def complete_orders():
     if order.complete_time == '':
         courier.currentw -= order.weight
     order.complete_time = complete_t
-    if not db_sess.query(Order).filter(Order.orders_courier == courier_id, Order.complete_time == '').all():
+    if not db_sess.query(Order).filter(Order.orders_courier == courier_id,
+                                       Order.complete_time == '').all():
         courier.earnings += courier.last_pack_cost
         courier.last_pack_cost = 0
     db_sess.commit()

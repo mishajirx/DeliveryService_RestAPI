@@ -10,7 +10,7 @@ $ pip install -r requirements.txt
 Для запуска приложения нужно просто выполнить в консоли
 python3 main.py (или python main.py)
 #### Пример #### 
-$ python3 main.py
+$ sudo python3 main.py
 
 ## Запуск Тестов ##
 Для запуска тестов нужно:
@@ -19,9 +19,9 @@ $ python3 main.py
 3. выполнить test.py (и указать в параметре clear 1, если нужно очистить базу данных, иначе 0)
 4. Также нужно ввести пароль (zhern0206eskiy)
 #### Пример: ####
-$ python3 main.py
+$ sudo python3 main.py
 $ ^Z
 & bg
-$ python3 test.py --clear 1
+$ sudo python3 test.py --clear 1
 
 Читать описание тестов и параллельно следить за результатом.
