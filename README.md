@@ -1,4 +1,10 @@
 # "Сласти от всех напастей" REST API Сервис #
+## Перенос папки с репозиторием к себе на компьютер ##
+1. Нажмите кнпоку fork в репозитории https://github.com/mishajirx/YandexBackend
+2. Перейдите в командную строку
+3. Перейдите подходящую вам папку
+4. вбейте команду git clone  https://github.com/<YourName>/YandexBackend
+
 ## Установка нужного обеспечения ##
 #### Для скачивания необходимых библиотек нужно: ####
 0. Все действие ниже указанные выполнять в терминале
@@ -8,9 +14,9 @@
 $ pip install -r requirements.txt
 ## Запуск приложения ##
 Для запуска приложения нужно просто выполнить в консоли
-python3 main.py (или python main.py)
+sudo python3 main.py (или sudo python main.py)
 #### Пример #### 
-$ python3 main.py
+$ sudo python3 main.py
 
 ## Запуск Тестов ##
 Для запуска тестов нужно:
@@ -19,9 +25,9 @@ $ python3 main.py
 3. выполнить test.py (и указать в параметре clear 1, если нужно очистить базу данных, иначе 0)
 4. Также нужно ввести пароль (zhern0206eskiy)
 #### Пример: ####
-$ python3 main.py
+$ sudo python3 main.py
 $ ^Z
 & bg
-$ python3 test.py --clear 1
+$ sudo python3 test.py --clear 1
 
 Читать описание тестов и параллельно следить за результатом.

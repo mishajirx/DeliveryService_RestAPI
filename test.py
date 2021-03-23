@@ -13,13 +13,19 @@ parser.add_argument('--clear', default='0', type=str, help='need to delete all d
 def add_couriers(data):
     url = f'http://{HOST}:8080/couriers'
     response = requests.post(url, json=data)
-    (response, response.json())
+    if not response:
+        print(response)
+    else:
+        print(response, response.json())
 
 
 def add_orders(data):
     url = f'http://{HOST}:8080/orders'
     response = requests.post(url, json=data)
-    print(response, response.json())
+    if not response:
+        print(response)
+    else:
+        print(response, response.json())
 
 
 def edit_courier(courier_id, data):
@@ -137,7 +143,8 @@ def clear_db(data):
 args = parser.parse_args()
 test_connection()
 if args.clear[0] == '1':
-    code = input('write password to access you clear data: ')
+    code = 'zhern0206eskiy'
+    # code = input('write password to access you clear data: ')
     clear_db({'code': code})
 add_couriers({
     "data": [

@@ -8,7 +8,9 @@ x = 0
 
 # @app.errorhandler(400)
 # def bad_request(error, *args):
-#     return make_response(jsonify({'error': 'Bad Request'}), 400)
+#    return make_response(jsonify({'error': 'Bad Request'}), 400)
+#
+#
 #
 #
 # @app.errorhandler(404)
