@@ -57,7 +57,7 @@ class OrderModel(pydantic.BaseModel):
 
     @validator('weight')
     def weight_should_be(cls, w: float):
-        if not 0.1 <= w <= 50:
+        if not 0.01 <= w <= 50:
             raise ValueError('bad value, ' + str(w))
         return w
 

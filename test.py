@@ -13,13 +13,19 @@ parser.add_argument('--clear', default='0', type=str, help='need to delete all d
 def add_couriers(data):
     url = f'http://{HOST}:8080/couriers'
     response = requests.post(url, json=data)
-    (response, response.json())
+    if not response:
+        print(response)
+    else:
+        print(response, response.json())
 
 
 def add_orders(data):
     url = f'http://{HOST}:8080/orders'
     response = requests.post(url, json=data)
-    print(response, response.json())
+    if not response:
+        print(response)
+    else:
+        print(response, response.json())
 
 
 def edit_courier(courier_id, data):
