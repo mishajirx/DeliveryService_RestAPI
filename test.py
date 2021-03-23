@@ -79,6 +79,7 @@ def test_connection():
             print(response.json())
         else:
             print(response)
+        clear_db({'code': 'zhern0206eskiy'})
     except requests.exceptions.ConnectionError as e:
         print('Something went wrong: Connection Error')
         print('Try to rerun service')
