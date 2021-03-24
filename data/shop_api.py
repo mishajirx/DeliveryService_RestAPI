@@ -214,8 +214,7 @@ def edit_courier(courier_id):
             dh = db_sess.query(DH).filter(DH.order_id == i.id).all()
             if i.complete_time:
                 continue
-            if i.weight + courier.currentw > courier.maxw or i.region not in res[
-                'regions'] or not is_t_ok(dh, a):
+            if i.weight + courier.currentw > courier.maxw or i.region not in res['regions'] or not is_t_ok(dh, a):
                 i.orders_courier = 0
                 courier.currentw -= i.weight
         db_sess.commit()

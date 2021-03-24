@@ -13,7 +13,6 @@ parser.add_argument('--clear', default='0', type=str, help='need to delete all d
 def add_couriers(data) -> requests.models.Response:
     url = f'http://{HOST}:8080/couriers'
     response = requests.post(url, json=data)
-    print(type(response))
     return response
     # print(response, response.json())
 
@@ -24,13 +23,14 @@ def add_orders(data):
     print(response, response.json())
 
 
-def edit_courier(courier_id, data):
+def edit_courier(courier_id, data) -> requests.models.Response:
     url = f'http://{HOST}:8080/couriers/' + str(courier_id)
     response = requests.patch(url, json=data)
-    if not response:
-        print(response)
-    else:
-        print(response, response.json())
+    return response
+    # if not response:
+    #     print(response)
+    # else:
+    #     print(response, response.json())
 
 
 def get_courier(courier_id):
@@ -196,19 +196,30 @@ def test_post_couriers_missing_field():
     # {'validation_error': [{'id': 7}]}
 
 
-def test_patch_couriers():
-    edit_courier(1, {
+def test_patch_couriers_all_params():
+    res = edit_courier(1, {
         "regions": [11, 33, 2],
         "working_hours": ['12:00-12:30'],
         'courier_type': 'car'
     })  # изменение всех параметров (нормальные данные)
-    edit_courier(1, {
+    assert res.status_code == 200 and res.json() == {'courier_id': '1', 'courier_type': 'foot', 'regions': [11, 33, 2],
+                                                     'working_hours': ['12:00-12:30']}
+
+
+def test_patch_couriers_any_params():
+    res = edit_courier(1, {
         "regions": [11, 2],
         "working_hours": ['11:00-15:30'],
     })  # изменение не всех параметров (нормальные данные)
-    edit_courier(1, {
+    assert res.status_code == 200 and res.json() == {'courier_id': '1', 'courier_type': 'foot', 'regions': [11, 2],
+                                                     'working_hours': ['11:00-15:30']}
+
+
+def test_patch_couriers_wrong_params():
+    res = edit_courier(1, {
         'bar': 123
     })  # изменение несуществующего параметра (ошибка)
+    assert res.status_code == 400
 
 
 def test_post_orders():
