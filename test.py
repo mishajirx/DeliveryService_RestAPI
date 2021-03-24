@@ -10,22 +10,18 @@ parser.add_argument('--clear', default='0', type=str, help='need to delete all d
 
 
 # methods for comfortable testing
-def add_couriers(data):
+def add_couriers(data) -> requests.models.Response:
     url = f'http://{HOST}:8080/couriers'
     response = requests.post(url, json=data)
-    if not response:
-        print(response)
-    else:
-        print(response, response.json())
+    print(type(response))
+    return response
+    # print(response, response.json())
 
 
 def add_orders(data):
     url = f'http://{HOST}:8080/orders'
     response = requests.post(url, json=data)
-    if not response:
-        print(response)
-    else:
-        print(response, response.json())
+    print(response, response.json())
 
 
 def edit_courier(courier_id, data):
@@ -71,6 +67,9 @@ def clear_db(data):
     print(response, response.json())
 
 
+"""Тест соединения"""
+
+
 def test_connection():
     try:
         test_url = f'http://{HOST}:8080/test'
@@ -89,8 +88,8 @@ def test_connection():
 """ Основные тесты"""
 
 
-def test_post_couriers():
-    add_couriers({
+def test_post_couriers_normal_data():
+    res = add_couriers({
         "data": [
             {
                 "courier_id": 1,
@@ -112,7 +111,12 @@ def test_post_couriers():
             }
         ]
     })  # добавление курьеров (нормальные данные)
-    add_couriers({
+    assert res.status_code == 201 and res.json() == {'couriers': [{'id': 1}, {'id': 2}, {'id': 3}]}
+    # {'couriers': [{'id': 1}, {'id': 2}, {'id': 3}]}
+
+
+def test_post_couriers_repeating_id():
+    res = add_couriers({
         "data": [
             {
                 "courier_id": 1,
@@ -134,7 +138,12 @@ def test_post_couriers():
             }
         ]
     })  # повторение айдишников (ошибка)
-    add_couriers({
+    assert res.status_code == 400 and res.json() == {'validation_error': [{'id': 1}, {'id': 2}, {'id': 3}]}
+    # {'validation_error': [{'id': 1}, {'id': 2}, {'id': 3}]}
+
+
+def test_post_couriers_wrong_field():
+    res = add_couriers({
         "data": [
             {
                 "courier_id": 5,
@@ -157,7 +166,12 @@ def test_post_couriers():
             }
         ]
     })  # несуществующее поле (ошибка)
-    add_couriers({
+    assert res.status_code == 400 and res.json() == {'validation_error': [{'id': 9}]}
+    # {'validation_error': [{'id': 9}]}
+
+
+def test_post_couriers_missing_field():
+    res = add_couriers({
         "data": [
             {
                 "courier_id": 5,
@@ -178,6 +192,8 @@ def test_post_couriers():
             }
         ]
     })  # отсутствие поля (ошибка)
+    assert res.status_code == 400 and res.json() == {'validation_error': [{'id': 7}]}
+    # {'validation_error': [{'id': 7}]}
 
 
 def test_patch_couriers():
@@ -433,7 +449,8 @@ def test_orders_are_not_for_many_couriers():
                 "working_hours": ["13:00-13:50"]
             }
         ]
-    })  # создадим двух одинаковых курьеров
+    })  # создадим двух почти одинаковых курьеров
+    # {'couriers': [{'id': 6}, {'id': 7}]}
     add_orders({
         "data": [
             {
