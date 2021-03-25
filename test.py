@@ -13,24 +13,25 @@ parser.add_argument('--clear', default='0', type=str, help='need to delete all d
 def add_couriers(data) -> requests.models.Response:
     url = f'http://{HOST}:8080/couriers'
     response = requests.post(url, json=data)
-    return response
     # print(response, response.json())
+    return response
 
 
-def add_orders(data):
+def add_orders(data) -> requests.models.Response:
     url = f'http://{HOST}:8080/orders'
     response = requests.post(url, json=data)
     print(response, response.json())
+    return response
 
 
 def edit_courier(courier_id, data) -> requests.models.Response:
     url = f'http://{HOST}:8080/couriers/' + str(courier_id)
     response = requests.patch(url, json=data)
-    return response
     # if not response:
     #     print(response)
     # else:
     #     print(response, response.json())
+    return response
 
 
 def get_courier(courier_id):
@@ -222,8 +223,8 @@ def test_patch_couriers_wrong_params():
     assert res.status_code == 400
 
 
-def test_post_orders():
-    add_orders({
+def test_post_orders_normal_data():
+    res = add_orders({
         "data": [
             {
                 "order_id": 1,
@@ -245,7 +246,11 @@ def test_post_orders():
             }
         ]
     })  # добавление заказов (нормальные данные)
-    add_orders({
+    assert res.status_code == 201 and res.json() == {'orders': [{'id': 1}, {'id': 2}, {'id': 3}]}
+
+
+def test_post_orders_repeating_id():
+    res = add_orders({
         "data": [
             {
                 "order_id": 5,
@@ -267,7 +272,11 @@ def test_post_orders():
             }
         ]
     })  # повторение айди (ошибка)
-    add_orders({
+    assert res.status_code == 400 and res.json() == {'validation_error': [{'id': 3}]}
+
+
+def test_post_orders_missing_field():
+    res = add_orders({
         "data": [
             {
                 "order_id": 1,
@@ -290,28 +299,11 @@ def test_post_orders():
             }
         ]
     })  # несуществующее поле (ошибка)
-    add_orders({
-        "data": [
-            {
-                "order_id": 16,
-                "weight": 0.23,
-                "region": 12,
-                "delivery_hours": ["09:00-18:00"]
-            },
-            {
-                "order_id": 8,
-                "weight": 15,
-                "delivery_hours": ["09:00-18:00"]
-            },
-            {
-                "order_id": 10,
-                "weight": 0.01,
-                "region": 22,
-                "delivery_hours": ["09:00-12:00", "16:00-21:30"]
-            }
-        ]
-    })  # отсутствие поля (ошибка)
-    add_orders({
+    assert res.status_code == 400 and res.json() == {'validation_error': [{'id': 1}, {'id': 2}, {'id': 3}]}
+
+
+def test_post_orders_too_big_weight():
+    res = add_orders({
         "data": [
             {
                 "order_id": 10,
@@ -333,7 +325,11 @@ def test_post_orders():
             }
         ]
     })  # слишком большой вес (ошибка)
-    add_orders({
+    assert res.status_code == 400 and res.json() == {'validation_error': [{'id': 10}]}
+
+
+def test_post_orders_too_small_weight():
+    res = add_orders({
         "data": [
             {
                 "order_id": 10,
@@ -355,6 +351,7 @@ def test_post_orders():
             }
         ]
     })  # слишком маленький вес (ошибка)
+    assert res.status_code == 400 and res.json() == {'validation_error': [{'id': 10}]}
 
 
 def test_assign_orders():

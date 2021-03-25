@@ -255,15 +255,12 @@ def assign_orders():
         # print('didnt all task')
         res = [{'id': i.id} for i in ords]
         return jsonify({'orders': res, 'assign_time': courier.last_assign_time}), 201
-    courier_regions = [i.region for i in
-                       db_sess.query(Region).filter(Region.courier_id == courier_id).all()]
+    courier_regions = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier_id).all()]
     courier_wh = db_sess.query(WH).filter(WH.courier_id == courier_id).all()
     if not courier:
         abort(400)
 
-    ords = db_sess.query(Order).filter((Order.orders_courier == 0),
-                                       # | (Order.orders_courier == courier_id),
-                                       Order.region.in_(courier_regions)).all()
+    ords = db_sess.query(Order).filter((Order.orders_courier == 0), Order.region.in_(courier_regions)).all()
     # print(ords)
     for order in sorted(ords, key=lambda x: x.weight):
         if order.weight + courier.currentw > courier.maxw:
