@@ -9,8 +9,14 @@ parser = argparse.ArgumentParser(  # объект обрабатывающий �
 parser.add_argument('--clear', default='0', type=str, help='need to delete all data?(yes(1)/no(0))')
 
 
-def check_assign_time():
-    pass
+def check_assign_time(j1: dict, j2: dict):
+    t1 = j1['assign_time']
+    t2 = j2['assign_time']
+    u = datetime.datetime.fromisoformat(t1.split('.')[0])
+    v = datetime.datetime.fromisoformat(t2.split('.')[0])
+    if (u - v).total_seconds() <= 1:
+        return True
+    return False
 
 
 # methods for comfortable testing
@@ -367,8 +373,7 @@ def test_assign_orders_courier_with_some_orders():
 def test_assign_orders_courier_without_orders():
     res = assign_orders(2)  # назначение заказов курьеру 2 (нормальные данные)
     t = str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
-    assert res.status_code == 200
-    # check_assign_time(res.json(), {'assign_time': t, 'orders': [{'id': 3}]})
+    assert res.status_code == 200 and check_assign_time(res.json(), {'assign_time': t, 'orders': [{'id': 3}]})
 
 
 def test_assign_orders_wrong_courier():
@@ -380,8 +385,10 @@ def test_assign_orders_idempotent_proof():
     res1 = assign_orders(2)  # назначение заказов курьеру 2 (нормальные данные)
     res2 = assign_orders(2)
     t = str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
-    assert res1.status_code == res2.status_code == 201
-    # and res1.json() == res2.json() == {'assign_time': t, 'orders': [{'id': 3}]}
+    assert res1.status_code == res2.status_code == 201 and \
+           check_assign_time(res1.json(), res2.json()) and \
+           check_assign_time(res1.json(), {'assign_time': t, 'orders': [{'id': 3}]}) and \
+           check_assign_time(res2.json(), {'assign_time': t, 'orders': [{'id': 3}]})
 
 
 def test_complete_orders():

@@ -236,8 +236,7 @@ def edit_courier(courier_id):
             return jsonify(res), 201
         try:
             t = min([i.summa / i.q
-                     for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()
-                     if i.q != 0])
+                     for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()if i.q != 0])
         except ValueError:
             t = 60 * 60
         res['rating'] = (60 * 60 - min(t, 60 * 60)) / (60 * 60) * 5
@@ -249,8 +248,7 @@ def assign_orders():
     courier_id = request.json['courier_id']
     db_sess = db_session.create_session()
     courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
-    ords = db_sess.query(Order).filter(Order.orders_courier == courier_id,
-                                       Order.complete_time == '').all()
+    ords = db_sess.query(Order).filter(Order.orders_courier == courier_id, Order.complete_time == '').all()
     if ords:
         # print('didnt all task')
         res = [{'id': i.id} for i in ords]
@@ -273,8 +271,7 @@ def assign_orders():
     db_sess.commit()
 
     res = [{'id': order.id} for order in
-           db_sess.query(Order).filter(Order.orders_courier == courier_id,
-                                       '' == Order.complete_time)]
+           db_sess.query(Order).filter(Order.orders_courier == courier_id, '' == Order.complete_time)]
     if not res:
         return jsonify({"orders": []}), 200
     courier.last_pack_cost = kd[courier.maxw] * 500
