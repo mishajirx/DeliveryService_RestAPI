@@ -26,6 +26,7 @@ kd = {10: 2, 15: 5, 50: 9}
 CODE = 'zhern0206eskiy'
 
 
+# TODO Сделать дополнительные ответы для bad request'ов
 class CourierModel(pydantic.BaseModel):
     courier_id: int
     courier_type: str
@@ -236,7 +237,7 @@ def edit_courier(courier_id):
             return jsonify(res), 201
         try:
             t = min([i.summa / i.q
-                     for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()if i.q != 0])
+                     for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all() if i.q != 0])
         except ValueError:
             t = 60 * 60
         res['rating'] = (60 * 60 - min(t, 60 * 60)) / (60 * 60) * 5

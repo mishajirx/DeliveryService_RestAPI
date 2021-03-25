@@ -443,6 +443,7 @@ def test_complete_orders_wrong_courier_wrong_order():
     assert res.status_code == 400
 
 
+# TODO Сделать нормальное сравнение рейтинга
 def test_get_courier_with_some_orders():
     res = get_courier(3)  # информация о курьере 3 (нормальные данные)
     assert res.status_code == 201 and \
@@ -460,6 +461,7 @@ def test_get_courier_wrong_id():
     assert res.status_code == 400
 
 
+# TODO Сделать тестирование частных случаев
 """ Тест на то что при изменение данных о курьере заказ может стать свободным """
 
 
