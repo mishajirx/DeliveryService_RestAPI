@@ -9,6 +9,10 @@ parser = argparse.ArgumentParser(  # объект обрабатывающий �
 parser.add_argument('--clear', default='0', type=str, help='need to delete all data?(yes(1)/no(0))')
 
 
+def check_assign_time():
+    pass
+
+
 # methods for comfortable testing
 def add_couriers(data) -> requests.models.Response:
     url = f'http://{HOST}:8080/couriers'
@@ -20,7 +24,7 @@ def add_couriers(data) -> requests.models.Response:
 def add_orders(data) -> requests.models.Response:
     url = f'http://{HOST}:8080/orders'
     response = requests.post(url, json=data)
-    print(response, response.json())
+    # print(response, response.json())
     return response
 
 
@@ -51,6 +55,7 @@ def assign_orders(courier_id):
         print(response)
     else:
         print(response, response.json())
+    return response
 
 
 def complete_orders(data):
@@ -354,14 +359,29 @@ def test_post_orders_too_small_weight():
     assert res.status_code == 400 and res.json() == {'validation_error': [{'id': 10}]}
 
 
-def test_assign_orders():
-    assign_orders(1)  # назначение заказов курьеру 1 (нормальные данные)
-    assign_orders(1)  # назначение заказов курьеру 1 (нормальные данные) доказываем идемпотентность
-    assign_orders(2)  # назначение заказов курьеру 2 (нормальные данные)
-    assign_orders(2)  # назначение заказов курьеру 2 (нормальные данные) доказываем идемпотентность
-    assign_orders(3)  # назначение заказов курьеру 3 (нормальные данные)
-    assign_orders(3)  # назначение заказов курьеру 1 (нормальные данные) доказываем идемпотентность
-    assign_orders(4)  # назначение заказов курьеру 3 (ошибка)
+def test_assign_orders_courier_with_some_orders():
+    res = assign_orders(1)  # назначение заказов курьеру 1 (нормальные данные)
+    assert res.status_code == 200 and res.json() == {'orders': []}
+
+
+def test_assign_orders_courier_without_orders():
+    res = assign_orders(2)  # назначение заказов курьеру 2 (нормальные данные)
+    t = str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
+    assert res.status_code == 200
+    # check_assign_time(res.json(), {'assign_time': t, 'orders': [{'id': 3}]})
+
+
+def test_assign_orders_wrong_courier():
+    res = assign_orders(4)  # назначение заказов курьеру 3 (ошибка)
+    assert res.status_code == 400
+
+
+def test_assign_orders_idempotent_proof():
+    res1 = assign_orders(2)  # назначение заказов курьеру 2 (нормальные данные)
+    res2 = assign_orders(2)
+    t = str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
+    assert res1.status_code == res2.status_code == 201
+    # and res1.json() == res2.json() == {'assign_time': t, 'orders': [{'id': 3}]}
 
 
 def test_complete_orders():
