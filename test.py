@@ -44,13 +44,14 @@ def edit_courier(courier_id, data) -> requests.models.Response:
     return response
 
 
-def get_courier(courier_id):
+def get_courier(courier_id) -> requests.models.Response:
     url = f'http://{HOST}:8080/couriers/' + str(courier_id)
     response = requests.get(url)
     if not response:
         print(response)
     else:
         print(response, response.json())
+    return response
 
 
 def assign_orders(courier_id):
@@ -419,11 +420,21 @@ def test_complete_orders():
     })  # выполнение курьером 4 заказа 5 (ошибка)
 
 
-def test_get_courier():
-    get_courier(1)  # информация о курьере 1 (нормальные данные)
-    get_courier(2)  # информация о курьере 2 (нормальные данные)
-    get_courier(3)  # информация о курьере 3 (нормальные данные)
-    get_courier(4)  # информация о курьере 4 (ошибка)
+def test_get_courier_with_some_orders():
+    res = get_courier(3)  # информация о курьере 3 (нормальные данные)
+    assert res.status_code == 201 and \
+           res.json() == {'courier_id': '3', 'courier_type': 'car', 'earnings': 0, 'regions': [12, 22, 23, 33],
+                          'working_hours': ['22:00-22:30']}
+
+
+def test_get_courier_without_any_orders():
+    res = get_courier(2)  # информация о курьере 2 (нормальные данные)
+    assert res.status_code == 201
+
+
+def test_get_courier_wrong_id():
+    res = get_courier(4)  # информация о курьере 4 (ошибка)
+    assert res.status_code == 400
 
 
 """ Тест на то что при изменение данных о курьере заказ может стать свободным """
