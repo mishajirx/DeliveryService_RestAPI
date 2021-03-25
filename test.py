@@ -47,31 +47,32 @@ def edit_courier(courier_id, data) -> requests.models.Response:
 def get_courier(courier_id) -> requests.models.Response:
     url = f'http://{HOST}:8080/couriers/' + str(courier_id)
     response = requests.get(url)
-    if not response:
-        print(response)
-    else:
-        print(response, response.json())
+    # if not response:
+    #     print(response)
+    # else:
+    #     print(response, response.json())
     return response
 
 
-def assign_orders(courier_id):
+def assign_orders(courier_id) -> requests.models.Response:
     url = f'http://{HOST}:8080/orders/assign'
     data = {'courier_id': courier_id}
     response = requests.post(url, json=data)
-    if not response:
-        print(response)
-    else:
-        print(response, response.json())
+    # if not response:
+    #     print(response)
+    # else:
+    #     print(response, response.json())
     return response
 
 
-def complete_orders(data):
+def complete_orders(data) -> requests.models.Response:
     url = f'http://{HOST}:8080/orders/complete'
     response = requests.post(url, json=data)
-    if not response:
-        print(response)
-    else:
-        print(response, response.json())
+    # if not response:
+    #     print(response)
+    # else:
+    #     print(response, response.json())
+    return response
 
 
 def clear_db(data):
@@ -392,32 +393,54 @@ def test_assign_orders_idempotent_proof():
            check_assign_time(res2.json(), {'assign_time': t, 'orders': [{'id': 3}]})
 
 
-def test_complete_orders():
-    complete_orders({
+def test_complete_orders_right_order_and_courier():
+    res = complete_orders({
         "courier_id": 2,
         "order_id": 3,
         "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     })  # выполнение курьером 2 заказа 3 (нормальные данные)
-    complete_orders({
+    assert res.status_code == 200 and res.json() == {'order_id': 3}
+
+
+def test_complete_orders_right_data_idempotent_proof():
+    res1 = complete_orders({
         "courier_id": 2,
         "order_id": 3,
         "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     })  # выполнение курьером 2 заказа 3 (нормальные данные) доказываем идемпотентность
-    complete_orders({
+    res2 = complete_orders({
+        "courier_id": 2,
+        "order_id": 3,
+        "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
+    })
+    assert res2.status_code == res1.status_code == 200 and res2.json() == res1.json() == {'order_id': 3}
+
+
+def test_complete_orders_wrong_courier_right_order():
+    res = complete_orders({
         "courier_id": 1,
         "order_id": 3,
         "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     })  # выполнение курьером 1 заказа 3 (ошибка)
-    complete_orders({
+    assert res.status_code == 400
+
+
+def test_complete_orders_right_courier_wrong_order():
+    res = complete_orders({
         "courier_id": 2,
         "order_id": 1,
         "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     })  # выполнение курьером 2 заказа 1 (ошибка)
-    complete_orders({
+    assert res.status_code == 400
+
+
+def test_complete_orders_wrong_courier_wrong_order():
+    res = complete_orders({
         "courier_id": 4,
         "order_id": 5,
         "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     })  # выполнение курьером 4 заказа 5 (ошибка)
+    assert res.status_code == 400
 
 
 def test_get_courier_with_some_orders():
