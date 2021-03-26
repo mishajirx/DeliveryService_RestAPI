@@ -1,6 +1,7 @@
 import datetime
 import argparse
 import requests
+from pytest import ExitCode
 
 # HOST = '0.0.0.0'
 HOST = '127.0.0.1'
@@ -85,18 +86,18 @@ def clear_db(data):
 
 
 def test_connection():
-    try:
-        test_url = f'http://{HOST}:8080/test'
-        response = requests.get(test_url)
-        if response:
-            print(response.json())
-        else:
-            print(response)
-        clear_db({'code': 'zhern0206eskiy'})
-    except requests.exceptions.ConnectionError as e:
-        print('Something went wrong: Connection Error')
-        print('Try to rerun service')
-        exit(0)
+    print('Внимание, Тестирование запустит очистку базы данных')
+    ans = input('Продолжить?(y/n)')
+    assert ans == 'y'
+    test_url = f'http://{HOST}:8080/test'
+    response = requests.get(test_url)
+    # print('Something went wrong: Connection Error')
+    # print('Try to rerun service')
+    if response:
+        print(response.json())
+    else:
+        print(response)
+    clear_db({'code': 'zhern0206eskiy'})
 
 
 """ Основные тесты"""
@@ -547,14 +548,16 @@ def test_orders_are_not_for_many_couriers():
             }
         ]
     })  # добавим подходящий им заказ
-    res1 = assign_orders(6)  # один его получит
-    res2 = assign_orders(7)  # второй нет
-    res3 = complete_orders({
+    assign_orders(6)  # один его получит
+    res1 = assign_orders(7)  # второй нет
+    complete_orders({
         "courier_id": 6,
         "order_id": 8,
         "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     })  # выполняет заказ
-    res4 = assign_orders(7)  # второй также не может получить его
+    res2 = assign_orders(7)  # второй также не может получить его
+    assert res1.status_code == res2.status_code ==200 and res1.json() == res2.json() == {'orders': []}
+    # print(res1.json(), res2.json())
 
 # args = parser.parse_args()
 # test_connection()

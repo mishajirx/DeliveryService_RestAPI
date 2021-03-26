@@ -244,6 +244,8 @@ def assign_orders():
     courier_id = request.json['courier_id']
     db_sess = db_session.create_session()
     courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
+    if not courier:
+        abort(400)
     ords = db_sess.query(Order).filter(Order.orders_courier == courier_id, Order.complete_time == '').all()
     if ords:
         # print('didnt all task')
@@ -251,9 +253,6 @@ def assign_orders():
         return jsonify({'orders': res, 'assign_time': courier.last_assign_time}), 201
     courier_regions = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier_id).all()]
     courier_wh = db_sess.query(WH).filter(WH.courier_id == courier_id).all()
-    if not courier:
-        abort(400)
-
     ords = db_sess.query(Order).filter((Order.orders_courier == 0), Order.region.in_(courier_regions)).all()
     # print(ords)
     for order in sorted(ords, key=lambda x: x.weight):
