@@ -78,7 +78,7 @@ def complete_orders(data) -> requests.models.Response:
 def clear_db(data):
     url = f'http://{HOST}:8080/clear'
     response = requests.post(url, json=data)
-    print(response, response.json())
+    # print(response, response.json())
 
 
 """Тест соединения"""

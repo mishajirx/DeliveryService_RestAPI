@@ -3,18 +3,18 @@
 1. Нажмите кнопку fork в репозитории https://github.com/mishajirx/YandexBackend
 2. Перейдите в командную строку
 3. Перейдите подходящую вам папку
-4. вбейте команду git clone  https://github.com/<YourName>/YandexBackend
+4. вбейте команду sudo git clone  https://github.com/<YourName>/YandexBackend
 
 ## Установка нужного обеспечения ##
 #### Для скачивания необходимых библиотек нужно: ####
-0. Все действие ниже указанные выполнять в терминале
+0. Все действия ниже указанные выполнять в терминале
 1. Перейти в командной строке в каталог с проектом
-2. выполнить pip install -r requirements.txt
+2. выполнить sudo pip3 install -r requirements.txt
 #### Пример ####
-$ pip3 install -r requirements.txt
+$ sudo pip3 install -r requirements.txt
 ## Запуск приложения ##
 Для запуска приложения нужно просто выполнить в консоли
-sudo python3 main.py (или sudo python main.py)
+sudo python3 main.py (или python main.py)
 #### Пример #### 
 $ sudo python3 main.py
 
@@ -22,7 +22,7 @@ $ sudo python3 main.py
 Для запуска тестов нужно:
 1. Повторить пункты из раздела "Запуск приложения"
 2. Нажать ctrl+z. Выполнить bg
-3. выполнить pytest-3 test.py -x -s
+3. выполнить sudo pytest-3 test.py -x -s
 4. ввести 'y'
 #### Пример: ####
 1. $ sudo python3 main.py
@@ -30,3 +30,4 @@ $ sudo python3 main.py
 3. $ bg
 4. $ sudo pytest test.py -x -s
 
+(Если у вас ОС Windows, то тройки и sudo ставить не надо)
