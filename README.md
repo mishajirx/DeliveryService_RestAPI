@@ -25,8 +25,8 @@ $ sudo python3 main.py
 3. выполнить test.py -x -s
 4. ввести 'y'
 #### Пример: ####
-$ sudo python3 main.py
-$ ^Z
-& bg
-$ sudo pytest test.py -x -s
+1. $ sudo python3 main.py
+2. $ ^Z
+3. $ bg
+4. $ sudo pytest test.py -x -s
 
