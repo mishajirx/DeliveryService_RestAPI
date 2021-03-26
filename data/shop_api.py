@@ -26,6 +26,7 @@ kd = {10: 2, 15: 5, 50: 9}
 CODE = 'zhern0206eskiy'
 
 
+# TODO Сделать дополнительные ответы для bad request'ов
 class CourierModel(pydantic.BaseModel):
     courier_id: int
     courier_type: str
@@ -168,17 +169,16 @@ def add_orders():
 
 @blueprint.route('/couriers/<courier_id>', methods=["PATCH", "GET"])
 def edit_courier(courier_id):
+    db_sess = db_session.create_session()
+    courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
+    if not courier:
+        abort(404)
     if request.method == 'PATCH':
         req_json = request.json
-        db_sess = db_session.create_session()
-        courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
-        flag = False
         try:
             EditCourierModel(**req_json)
         except pydantic.ValidationError as e:
             print(e.json())
-            flag = True
-        if flag or not courier:
             abort(400)
         for k, v in dict(req_json).items():
             if k == 'type':
@@ -214,17 +214,12 @@ def edit_courier(courier_id):
             dh = db_sess.query(DH).filter(DH.order_id == i.id).all()
             if i.complete_time:
                 continue
-            if i.weight + courier.currentw > courier.maxw or i.region not in res[
-                'regions'] or not is_t_ok(dh, a):
+            if i.weight + courier.currentw > courier.maxw or i.region not in res['regions'] or not is_t_ok(dh, a):
                 i.orders_courier = 0
                 courier.currentw -= i.weight
         db_sess.commit()
         return jsonify(res), 200
     elif request.method == 'GET':
-        db_sess = db_session.create_session()
-        courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
-        if not courier:
-            abort(400)
         res = {}
         res['courier_id'] = courier_id
         res['courier_type'] = rev_c_type[courier.maxw]
@@ -234,15 +229,14 @@ def edit_courier(courier_id):
         res['regions'] = b
         res['earnings'] = courier.earnings
         if not courier.earnings:
-            return jsonify(res), 201
+            return jsonify(res), 200
         try:
             t = min([i.summa / i.q
-                     for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()
-                     if i.q != 0])
+                     for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all() if i.q != 0])
         except ValueError:
             t = 60 * 60
-        res['rating'] = (60 * 60 - min(t, 60 * 60)) / (60 * 60) * 5
-        return jsonify(res), 201
+        res['rating'] = round((60 * 60 - min(t, 60 * 60)) / (60 * 60) * 5, 2)
+        return jsonify(res), 200
 
 
 @blueprint.route('/orders/assign', methods=["POST"])
@@ -250,21 +244,16 @@ def assign_orders():
     courier_id = request.json['courier_id']
     db_sess = db_session.create_session()
     courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
-    ords = db_sess.query(Order).filter(Order.orders_courier == courier_id,
-                                       Order.complete_time == '').all()
+    if not courier:
+        abort(400)
+    ords = db_sess.query(Order).filter(Order.orders_courier == courier_id, Order.complete_time == '').all()
     if ords:
         # print('didnt all task')
         res = [{'id': i.id} for i in ords]
         return jsonify({'orders': res, 'assign_time': courier.last_assign_time}), 201
-    courier_regions = [i.region for i in
-                       db_sess.query(Region).filter(Region.courier_id == courier_id).all()]
+    courier_regions = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier_id).all()]
     courier_wh = db_sess.query(WH).filter(WH.courier_id == courier_id).all()
-    if not courier:
-        abort(400)
-
-    ords = db_sess.query(Order).filter((Order.orders_courier == 0),
-                                       # | (Order.orders_courier == courier_id),
-                                       Order.region.in_(courier_regions)).all()
+    ords = db_sess.query(Order).filter((Order.orders_courier == 0), Order.region.in_(courier_regions)).all()
     # print(ords)
     for order in sorted(ords, key=lambda x: x.weight):
         if order.weight + courier.currentw > courier.maxw:
@@ -277,8 +266,7 @@ def assign_orders():
     db_sess.commit()
 
     res = [{'id': order.id} for order in
-           db_sess.query(Order).filter(Order.orders_courier == courier_id,
-                                       '' == Order.complete_time)]
+           db_sess.query(Order).filter(Order.orders_courier == courier_id, '' == Order.complete_time)]
     if not res:
         return jsonify({"orders": []}), 200
     courier.last_pack_cost = kd[courier.maxw] * 500
