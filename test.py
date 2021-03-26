@@ -468,11 +468,11 @@ def test_get_courier_wrong_id():
     assert res.status_code == 404
 
 
-# TODO Сделать тестирование частных случаев
+# TODO Сделать тестирование случая, когда два курьера не могут один заказ
 """ Тест на то что при изменение данных о курьере заказ может стать свободным """
 
 
-def test_orders_leaving():
+def test_orders_untying_weight():
     add_orders({
         "data": [
             {
@@ -485,27 +485,36 @@ def test_orders_leaving():
     })  # добавили заказ с весом 40 (норм)
     assign_orders(3)  # назначили его курьеру на машине (норм)
     edit_courier(3, {'courier_type': 'foot'})  # он поменял тип (норм)
-    complete_orders({
+    res = complete_orders({
         "courier_id": 3,
         "order_id": 4,
         "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     })  # заказ больше не его (ошибка)
     edit_courier(3, {'courier_type': 'car'})  # меняем обратно (ок)
+    assert res.status_code == 400
+
+
+def test_orders_untying_time():
     assign_orders(3)  # назначили его курьеру с подходящим временем (ок)
     edit_courier(3, {'working_hours': ['12:00-13:00']})  # он поменял рабочее время (ок)
-    complete_orders({
+    res = complete_orders({
         "courier_id": 3,
         "order_id": 4,
         "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     })  # заказ больше не его (ошибка)
     edit_courier(3, {'working_hours': ['22:00-22:30']})  # меняем обратно (ок)
+    assert res.status_code == 400
+
+
+def test_orders_untying_region():
     assign_orders(3)  # назначили его курьеру с подходящим регионом (ок)
     edit_courier(3, {'regions': [1]})  # он поменял рабочее время (ок)
-    complete_orders({
+    res = complete_orders({
         "courier_id": 3,
         "order_id": 4,
         "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     })  # заказ больше не его (ошибка)
+    assert res.status_code == 400
 
 
 """Тест на то что нельзя забрать уже назначенный заказ"""
@@ -528,7 +537,6 @@ def test_orders_are_not_for_many_couriers():
             }
         ]
     })  # создадим двух почти одинаковых курьеров
-    # {'couriers': [{'id': 6}, {'id': 7}]}
     add_orders({
         "data": [
             {
@@ -539,14 +547,14 @@ def test_orders_are_not_for_many_couriers():
             }
         ]
     })  # добавим подходящий им заказ
-    assign_orders(6)  # один его получит
-    assign_orders(7)  # второй нет
-    complete_orders({
+    res1 = assign_orders(6)  # один его получит
+    res2 = assign_orders(7)  # второй нет
+    res3 = complete_orders({
         "courier_id": 6,
         "order_id": 8,
         "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     })  # выполняет заказ
-    assign_orders(7)  # второй также не может получить его
+    res4 = assign_orders(7)  # второй также не может получить его
 
 # args = parser.parse_args()
 # test_connection()
