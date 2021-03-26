@@ -469,7 +469,6 @@ def test_get_courier_wrong_id():
     assert res.status_code == 404
 
 
-# TODO Сделать тестирование случая, когда два курьера не могут один заказ
 """ Тест на то что при изменение данных о курьере заказ может стать свободным """
 
 
@@ -556,7 +555,7 @@ def test_orders_are_not_for_many_couriers():
         "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     })  # выполняет заказ
     res2 = assign_orders(7)  # второй также не может получить его
-    assert res1.status_code == res2.status_code ==200 and res1.json() == res2.json() == {'orders': []}
+    assert res1.status_code == res2.status_code == 200 and res1.json() == res2.json() == {'orders': []}
     # print(res1.json(), res2.json())
 
 # args = parser.parse_args()
