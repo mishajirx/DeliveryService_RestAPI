@@ -236,6 +236,13 @@ def test_patch_couriers_wrong_params():
     assert res.status_code == 400
 
 
+def test_patch_couriers_wrong_id():
+    res = edit_courier(10, {
+        'regions': [1, 2, 3]
+    })  # изменение несуществующего параметра (ошибка)
+    assert res.status_code == 404
+
+
 def test_post_orders_normal_data():
     res = add_orders({
         "data": [
@@ -443,7 +450,6 @@ def test_complete_orders_wrong_courier_wrong_order():
     assert res.status_code == 400
 
 
-# TODO Сделать нормальное сравнение рейтинга
 def test_get_courier_with_some_orders():
     res = get_courier(3)  # информация о курьере 3 (нормальные данные)
     assert res.status_code == 201 and \
@@ -453,12 +459,13 @@ def test_get_courier_with_some_orders():
 
 def test_get_courier_without_any_orders():
     res = get_courier(2)  # информация о курьере 2 (нормальные данные)
-    assert res.status_code == 201
+    assert res.status_code == 201 and res.json() == {'courier_id': '2', 'courier_type': 'bike', 'earnings': 2500,
+                                                     'rating': 5.0, 'regions': [22], 'working_hours': ['09:00-18:00']}
 
 
 def test_get_courier_wrong_id():
     res = get_courier(4)  # информация о курьере 4 (ошибка)
-    assert res.status_code == 400
+    assert res.status_code == 404
 
 
 # TODO Сделать тестирование частных случаев

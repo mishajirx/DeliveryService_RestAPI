@@ -169,17 +169,16 @@ def add_orders():
 
 @blueprint.route('/couriers/<courier_id>', methods=["PATCH", "GET"])
 def edit_courier(courier_id):
+    db_sess = db_session.create_session()
+    courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
+    if not courier:
+        abort(404)
     if request.method == 'PATCH':
         req_json = request.json
-        db_sess = db_session.create_session()
-        courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
-        flag = False
         try:
             EditCourierModel(**req_json)
         except pydantic.ValidationError as e:
             print(e.json())
-            flag = True
-        if flag or not courier:
             abort(400)
         for k, v in dict(req_json).items():
             if k == 'type':
@@ -221,10 +220,6 @@ def edit_courier(courier_id):
         db_sess.commit()
         return jsonify(res), 200
     elif request.method == 'GET':
-        db_sess = db_session.create_session()
-        courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
-        if not courier:
-            abort(400)
         res = {}
         res['courier_id'] = courier_id
         res['courier_type'] = rev_c_type[courier.maxw]
@@ -240,7 +235,7 @@ def edit_courier(courier_id):
                      for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all() if i.q != 0])
         except ValueError:
             t = 60 * 60
-        res['rating'] = (60 * 60 - min(t, 60 * 60)) / (60 * 60) * 5
+        res['rating'] = round((60 * 60 - min(t, 60 * 60)) / (60 * 60) * 5, 2)
         return jsonify(res), 201
 
 
