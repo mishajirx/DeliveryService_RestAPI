@@ -11,7 +11,7 @@
 1. Перейти в командной строке в каталог с проектом
 2. выполнить pip install -r requirements.txt
 #### Пример ####
-$ pip install -r requirements.txt
+$ pip3 install -r requirements.txt
 ## Запуск приложения ##
 Для запуска приложения нужно просто выполнить в консоли
 sudo python3 main.py (или sudo python main.py)
@@ -22,7 +22,7 @@ $ sudo python3 main.py
 Для запуска тестов нужно:
 1. Повторить пункты из раздела "Запуск приложения"
 2. Нажать ctrl+z. Выполнить bg
-3. выполнить test.py -x -s
+3. выполнить pytest-3 test.py -x -s
 4. ввести 'y'
 #### Пример: ####
 1. $ sudo python3 main.py

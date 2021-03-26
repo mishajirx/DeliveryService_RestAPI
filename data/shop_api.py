@@ -1,8 +1,7 @@
 import datetime
 
-import flask, pydantic
+import pydantic
 from flask import jsonify, abort, request, Blueprint
-from sqlite3 import connect
 from data import db_session
 from data.couriers import Courier
 from data.orders import Order
