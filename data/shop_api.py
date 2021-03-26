@@ -229,14 +229,14 @@ def edit_courier(courier_id):
         res['regions'] = b
         res['earnings'] = courier.earnings
         if not courier.earnings:
-            return jsonify(res), 201
+            return jsonify(res), 200
         try:
             t = min([i.summa / i.q
                      for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all() if i.q != 0])
         except ValueError:
             t = 60 * 60
         res['rating'] = round((60 * 60 - min(t, 60 * 60)) / (60 * 60) * 5, 2)
-        return jsonify(res), 201
+        return jsonify(res), 200
 
 
 @blueprint.route('/orders/assign', methods=["POST"])

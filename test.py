@@ -453,14 +453,14 @@ def test_complete_orders_wrong_courier_wrong_order():
 
 def test_get_courier_with_some_orders():
     res = get_courier(3)  # информация о курьере 3 (нормальные данные)
-    assert res.status_code == 201 and \
+    assert res.status_code == 200 and \
            res.json() == {'courier_id': '3', 'courier_type': 'car', 'earnings': 0, 'regions': [12, 22, 23, 33],
                           'working_hours': ['22:00-22:30']}
 
 
 def test_get_courier_without_any_orders():
     res = get_courier(2)  # информация о курьере 2 (нормальные данные)
-    assert res.status_code == 201 and res.json() == {'courier_id': '2', 'courier_type': 'bike', 'earnings': 2500,
+    assert res.status_code == 200 and res.json() == {'courier_id': '2', 'courier_type': 'bike', 'earnings': 2500,
                                                      'rating': 5.0, 'regions': [22], 'working_hours': ['09:00-18:00']}
 
 
