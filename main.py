@@ -12,7 +12,7 @@ def hello():
 
 
 def main():
-    db_session.global_init("db/couriers.db")
+    db_session.global_init("/home/entrant/YandexBackend/db/couriers.db")
     app.register_blueprint(shop_api.blueprint)
     # app.run(port=8080)
     app.run(host='0.0.0.0', port=8080)
