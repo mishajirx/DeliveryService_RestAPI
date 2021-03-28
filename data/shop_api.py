@@ -28,10 +28,17 @@ CODE = 'zhern0206eskiy'
 
 # TODO Сделать дополнительные ответы для bad request'ов
 class CourierModel(pydantic.BaseModel):
+    base: List[int]
     courier_id: int
     courier_type: str
     regions: List[int]
     working_hours: List[str]
+
+    @validator('courier_type')
+    def weight_should_be(cls, courier_type: str):
+        if courier_type not in c_type:
+            raise ValueError('courier_type should be "foot", "car" or "bike"')
+        return courier_type
 
     class Config:
         extra = 'forbid'
@@ -48,6 +55,7 @@ class EditCourierModel(pydantic.BaseModel):
 
 
 class OrderModel(pydantic.BaseModel):
+    base: List[int]
     order_id: int
     weight: float
     region: int
@@ -59,7 +67,7 @@ class OrderModel(pydantic.BaseModel):
     @validator('weight')
     def weight_should_be(cls, w: float):
         if not 0.01 <= w <= 50:
-            raise ValueError('bad value, ' + str(w))
+            raise ValueError('weight should be between 0.01 and 50')
         return w
 
 
@@ -97,7 +105,7 @@ def add_couriers():
     for courier_info in req_json:
         flag = False
         try:
-            CourierModel(**courier_info)
+            CourierModel(**courier_info, base=already_in_base)
         except pydantic.ValidationError as e:
             print(e.json())
             flag = True
@@ -139,11 +147,14 @@ def add_orders():
     for order_info in req_json:
         flag = False
         try:
-            OrderModel(**order_info)
+            OrderModel(**order_info, base=already_in_base)
+            assert order_info['order_id'] not in already_in_base
         except pydantic.ValidationError as e:
             print(e.json())
             flag = True
-        if flag or not 0.01 <= order_info['weight'] <= 50 or order_info['order_id'] in already_in_base:
+        except AssertionError as e:
+            print(e)
+        if flag or order_info['order_id'] in already_in_base:
             is_ok = False
             bad_id.append({"id": int(order_info['order_id'])})
         if not is_ok:
@@ -172,7 +183,7 @@ def edit_courier(courier_id):
     db_sess = db_session.create_session()
     courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
     if not courier:
-        abort(404)
+        return jsonify({'message': 'no courier with this id'}), 404
     if request.method == 'PATCH':
         req_json = request.json
         try:
@@ -227,6 +238,10 @@ def edit_courier(courier_id):
         res['working_hours'] = a
         b = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()]
         res['regions'] = b
+        if not db_sess.query(Order).filter(Order.orders_courier == courier_id,
+                                           Order.complete_time == '').all():
+            courier.earnings += courier.last_pack_cost
+            courier.last_pack_cost = 0
         res['earnings'] = courier.earnings
         if not courier.earnings:
             return jsonify(res), 200

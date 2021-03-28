@@ -185,7 +185,7 @@ def test_post_couriers_wrong_field():
     # {'validation_error': [{'id': 9}]}
 
 
-def test_post_couriers_missing_field():
+def test_post_couriers_wrong_value():
     res = add_couriers({
         "data": [
             {
@@ -197,18 +197,19 @@ def test_post_couriers_missing_field():
             {
                 "courier_id": 7,
                 "courier_type": "bike",
+                "regions": [22],
                 "working_hours": ["09:00-18:00"]
             },
             {
                 "courier_id": 9,
                 "courier_type": "car",
-                "regions": [12, 22, 23, 33],
+                "regions": [12, 'f2', 23, 33],
                 "working_hours": [],
             }
         ]
-    })  # отсутствие поля (ошибка)
-    assert res.status_code == 400 and res.json() == {'validation_error': [{'id': 7}]}
-    # {'validation_error': [{'id': 7}]}
+    })  # несуществующее поле (ошибка)
+    assert res.status_code == 400 and res.json() == {'validation_error': [{'id': 9}]}
+    # {'validation_error': [{'id': 9}]}
 
 
 def test_patch_couriers_all_params():
