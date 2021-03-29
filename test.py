@@ -278,7 +278,7 @@ def test_patch_couriers_all_params():
         "working_hours": ['12:00-12:30'],
         'courier_type': 'car'
     })  # изменение всех параметров (нормальные данные)
-    assert res.status_code == 200 and res.json() == {'courier_id': '1', 'courier_type': 'foot', 'regions': [11, 33, 2],
+    assert res.status_code == 200 and res.json() == {'courier_id': '1', 'courier_type': 'car', 'regions': [11, 33, 2],
                                                      'working_hours': ['12:00-12:30']}
 
 
@@ -287,7 +287,7 @@ def test_patch_couriers_any_params():
         "regions": [11, 2],
         "working_hours": ['11:00-15:30'],
     })  # изменение не всех параметров (нормальные данные)
-    assert res.status_code == 200 and res.json() == {'courier_id': '1', 'courier_type': 'foot', 'regions': [11, 2],
+    assert res.status_code == 200 and res.json() == {'courier_id': '1', 'courier_type': 'car', 'regions': [11, 2],
                                                      'working_hours': ['11:00-15:30']}
 
 

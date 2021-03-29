@@ -178,7 +178,7 @@ def choose_orders(ords: list, maxw: int) -> list:
                     if dp[i][j][0] < dp[i - 1][j - a[i]][0] + c[i]:
                         dp[i][j] = (dp[i - 1][j - a[i]][0] + c[i], dp[i - 1][j - a[i]][1] + [i + 1])
         ans = max(dp[-1])[1]
-        return list(map(lambda x: x-1, ans))
+        return list(map(lambda x: x - 1, ans))
     except IndexError:
         return []
 
@@ -292,13 +292,8 @@ def edit_courier(courier_id):
             print({'errors': json.loads(e.json())})
             return jsonify({'errors': json.loads(e.json())}), 400
         for k, v in dict(req_json).items():
-            if k == 'type':
+            if k == 'courier_type':
                 courier.maxw = c_type[v]
-                ords = db_sess.query(Order).filter(Order.orders_courier == courier_id).all()
-                for i in sorted(ords, key=lambda p: p.weight, reverse=True):
-                    if courier.currentw > courier.maxw:
-                        i.orders_courier = 0
-                        courier.currentw -= i.weight
             elif k == 'regions':
                 db_sess.query(Region).filter(Region.courier_id == courier.id).delete()
                 for i in v:
@@ -314,9 +309,7 @@ def edit_courier(courier_id):
                     wh.hours = i
                     db_sess.add(wh)
         db_sess.commit()
-        res = {}
-        res['courier_id'] = courier_id
-        res['courier_type'] = rev_c_type[courier.maxw]
+        res = {'courier_id': courier_id, 'courier_type': rev_c_type[courier.maxw]}
         a = db_sess.query(WH).filter(WH.courier_id == courier.id).all()
         res['working_hours'] = [i.hours for i in a]
         b = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()]
@@ -325,15 +318,23 @@ def edit_courier(courier_id):
             dh = db_sess.query(DH).filter(DH.order_id == i.id).all()
             if i.complete_time:
                 continue
-            if i.weight + courier.currentw > courier.maxw or i.region not in res['regions'] or not is_t_ok(dh, a):
+            if i.region not in res['regions'] or not is_t_ok(dh, a):
                 i.orders_courier = 0
-                courier.currentw -= i.weight
+        db_sess.commit()
+        ords = list(db_sess.query(Order).filter(Order.orders_courier == courier_id, Order.complete_time == '').all())
+        for i in ords:
+            i.orders_courier = 0
+        db_sess.commit()
+        courier.currentw = 0
+        inds = choose_orders(list(map(lambda u: u.weight, ords)), courier.maxw)
+        for i in inds:
+            order = ords[i]
+            courier.currentw += order.weight
+            order.orders_courier = courier_id
         db_sess.commit()
         return jsonify(res), 200
     elif request.method == 'GET':
-        res = {}
-        res['courier_id'] = courier_id
-        res['courier_type'] = rev_c_type[courier.maxw]
+        res = {'courier_id': courier_id, 'courier_type': rev_c_type[courier.maxw]}
         a = [i.hours for i in db_sess.query(WH).filter(WH.courier_id == courier.id).all()]
         res['working_hours'] = a
         b = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier.id).all()]
@@ -370,9 +371,6 @@ def assign_orders():
     courier_wh = db_sess.query(WH).filter(WH.courier_id == courier_id).all()
     ords = db_sess.query(Order).filter((Order.orders_courier == 0), Order.region.in_(courier_regions)).all()
     ords = list(filter(lambda u: is_t_ok(db_sess.query(DH).filter(DH.order_id == u.id).all(), courier_wh), ords))
-    # print(ords)
-    print(ords)
-    print(list(map(lambda u: u.weight, ords)))
     inds = choose_orders(list(map(lambda u: u.weight, ords)), courier.maxw)
     for i in inds:
         order = ords[i]
