@@ -29,7 +29,6 @@ CODE = 'zhern0206eskiy'
 PATTERN = r = re.compile('.{2}:.{2}-.{2}:.{2}')
 
 
-# TODO Сделать дополнительные ответы для bad request'ов
 class CourierModel(pydantic.BaseModel):
     base: List[int]
     courier_id: int
@@ -162,6 +161,26 @@ def is_t_ok(l1, l2) -> bool:
         if balance >= 2:
             return True
     return False
+
+
+def choose_orders(ords: list, maxw: int) -> list:
+    try:
+        n, w = len(ords), maxw * 100
+        a = list(map(lambda x: int(x * 100), ords))
+        c = list(map(lambda x: int(x * 100), ords))
+        dp = [[(0, [])] + [(-1, [])] * w for i in range(n)]
+        dp[0][0] = (0, [])
+        dp[0][a[0]] = (c[0], [1])
+        for i in range(1, n):
+            for j in range(1, w + 1):
+                dp[i][j] = dp[i - 1][j]
+                if j - a[i] >= 0 and dp[i - 1][j - a[i]][0] != - 1:
+                    if dp[i][j][0] < dp[i - 1][j - a[i]][0] + c[i]:
+                        dp[i][j] = (dp[i - 1][j - a[i]][0] + c[i], dp[i - 1][j - a[i]][1] + [i + 1])
+        ans = max(dp[-1])[1]
+        return list(map(lambda x: x-1, ans))
+    except IndexError:
+        return []
 
 
 @blueprint.route('/couriers', methods=["POST"])
@@ -350,14 +369,15 @@ def assign_orders():
     courier_regions = [i.region for i in db_sess.query(Region).filter(Region.courier_id == courier_id).all()]
     courier_wh = db_sess.query(WH).filter(WH.courier_id == courier_id).all()
     ords = db_sess.query(Order).filter((Order.orders_courier == 0), Order.region.in_(courier_regions)).all()
+    ords = list(filter(lambda u: is_t_ok(db_sess.query(DH).filter(DH.order_id == u.id).all(), courier_wh), ords))
     # print(ords)
-    for order in sorted(ords, key=lambda x: x.weight):
-        if order.weight + courier.currentw > courier.maxw:
-            # print(order.id, 'go out', courier.currentw)
-            break
-        if is_t_ok(db_sess.query(DH).filter(DH.order_id == order.id).all(), courier_wh):
-            order.orders_courier = courier_id
-            courier.currentw += order.weight
+    print(ords)
+    print(list(map(lambda u: u.weight, ords)))
+    inds = choose_orders(list(map(lambda u: u.weight, ords)), courier.maxw)
+    for i in inds:
+        order = ords[i]
+        courier.currentw += order.weight
+        order.orders_courier = courier_id
 
     db_sess.commit()
 

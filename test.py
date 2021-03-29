@@ -651,3 +651,43 @@ def test_orders_are_not_for_many_couriers():
     res2 = assign_orders(7)  # второй также не может получить его
     assert res1.status_code == res2.status_code == 200 and res1.json() == res2.json() == {'orders': []}
     # print(res1.json(), res2.json())
+
+
+"""Тест на чёткое распределение заказов"""
+
+
+def test_assign_orders_right_orders_distributing():
+    add_couriers({
+        "data": [
+            {
+                "courier_id": 100,
+                "courier_type": "car",
+                "regions": [34],
+                "working_hours": ["11:35-14:05", "09:00-11:00"]
+            },
+        ]
+    })  # добавление курьеров (нормальные данные)
+    add_orders({
+        "data": [
+            {
+                "order_id": 101,
+                "weight": 49,
+                "region": 34,
+                "delivery_hours": ["09:00-18:00"]
+            },
+            {
+                "order_id": 102,
+                "weight": 25.5,
+                "region": 34,
+                "delivery_hours": ["09:00-18:00"]
+            },
+            {
+                "order_id": 103,
+                "weight": 24.5,
+                "region": 34,
+                "delivery_hours": ["09:00-18:00"]
+            }
+        ]
+    })  # добавление заказов (нормальные данные)
+    res = assign_orders(100)
+    assert res.status_code == 200 and res.json()['orders'] ==[{'id': 102}, {'id': 103}]
