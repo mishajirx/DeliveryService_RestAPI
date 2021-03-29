@@ -295,14 +295,15 @@ def test_patch_couriers_wrong_params():
     res = edit_courier(1, {
         'bar': 123
     })  # изменение несуществующего параметра (ошибка)
-    assert res.status_code == 400
+    assert res.status_code == 400 and res.json() == \
+           {'errors': [{'loc': ['bar'], 'msg': 'extra fields not permitted', 'type': 'value_error.extra'}]}
 
 
 def test_patch_couriers_wrong_id():
     res = edit_courier(10, {
         'regions': [1, 2, 3]
     })  # изменение несуществующего курьера (ошибка)
-    assert res.status_code == 404
+    assert res.status_code == 404 and res.json() == {'message': 'no courier with this id'}
 
 
 def test_post_orders_normal_data():
@@ -517,31 +518,31 @@ def test_complete_orders_right_data_idempotent_proof():
     assert res2.status_code == res1.status_code == 200 and res2.json() == res1.json() == {'order_id': 3}
 
 
-def test_complete_orders_wrong_courier_right_order():
+def test_complete_orders_courier_and_order_dont_match():
     res = complete_orders({
         "courier_id": 1,
         "order_id": 3,
         "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     })  # выполнение курьером 1 заказа 3 (ошибка)
-    assert res.status_code == 400
+    assert res.status_code == 400 and res.json() == {'message': 'courier and order don\'t match'}
 
 
-def test_complete_orders_right_courier_wrong_order():
+def test_complete_orders_wrong_order():
     res = complete_orders({
         "courier_id": 2,
-        "order_id": 1,
+        "order_id": 10,
         "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     })  # выполнение курьером 2 заказа 1 (ошибка)
-    assert res.status_code == 400
+    assert res.status_code == 400 and res.json() == {'message': 'no order with this id'}
 
 
-def test_complete_orders_wrong_courier_wrong_order():
+def test_complete_orders_wrong_courier():
     res = complete_orders({
         "courier_id": 4,
         "order_id": 5,
         "complete_time": str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
     })  # выполнение курьером 4 заказа 5 (ошибка)
-    assert res.status_code == 400
+    assert res.status_code == 400 and res.json() == {'message': 'no courier with this id'}
 
 
 def test_get_courier_with_some_orders():
@@ -650,10 +651,3 @@ def test_orders_are_not_for_many_couriers():
     res2 = assign_orders(7)  # второй также не может получить его
     assert res1.status_code == res2.status_code == 200 and res1.json() == res2.json() == {'orders': []}
     # print(res1.json(), res2.json())
-
-# args = parser.parse_args()
-# test_connection()
-# if args.clear[0] == '1':
-#     code = 'zhern0206eskiy'
-#     # code = input('write password to access you clear data: ')
-#     clear_db({'code': code})

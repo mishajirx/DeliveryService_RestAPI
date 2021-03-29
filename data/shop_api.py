@@ -38,7 +38,7 @@ class CourierModel(pydantic.BaseModel):
     working_hours: List[str]
 
     @validator('courier_type')
-    def weight_should_be(cls, courier_type: str):
+    def courier_type_should_be(cls, courier_type: str):
         if courier_type not in c_type:
             raise ValueError('courier_type should be "foot", "car" or "bike"')
         return courier_type
@@ -72,6 +72,32 @@ class EditCourierModel(pydantic.BaseModel):
     courier_type: Optional[str]
     regions: Optional[List[int]]
     working_hours: Optional[List[str]]
+
+    @validator('courier_type')
+    def courier_type_should_be(cls, courier_type: str):
+        if courier_type not in c_type:
+            raise ValueError('courier_type should be "foot", "car" or "bike"')
+        return courier_type
+
+    @validator('working_hours')
+    def wh_should_be(cls, working_hours: list):
+        for wh in working_hours:
+            if not PATTERN.match(wh):
+                raise ValueError('invalid working hours format')
+            if wh[2] != ':' or wh[5] != '-' or wh[8] != ':':
+                raise ValueError('invalid separators')
+            if not all(map(lambda x: x.isnumeric, [wh[0], wh[1], wh[3], wh[4], wh[6], wh[7], wh[9], wh[10]])):
+                raise ValueError('Hours/minutes should be integer')
+            else:
+                f1 = not 0 <= int(wh[0:2]) <= 23
+                f2 = not 0 <= int(wh[3:5]) <= 59
+                f3 = not 0 <= int(wh[6:8]) <= 23
+                f4 = not 0 <= int(wh[9:11]) <= 59
+                if f1 or f3:
+                    raise ValueError('Hours should be between 0 and 23')
+                if f2 or f4:
+                    raise ValueError('Minutes should be between 0 and 59')
+        return working_hours
 
     class Config:
         extra = 'forbid'
@@ -244,8 +270,8 @@ def edit_courier(courier_id):
         try:
             EditCourierModel(**req_json)
         except pydantic.ValidationError as e:
-            print(e.json())
-            abort(400)
+            print({'errors': json.loads(e.json())})
+            return jsonify({'errors': json.loads(e.json())}), 400
         for k, v in dict(req_json).items():
             if k == 'type':
                 courier.maxw = c_type[v]
@@ -315,7 +341,7 @@ def assign_orders():
     db_sess = db_session.create_session()
     courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
     if not courier:
-        abort(400)
+        return jsonify({'message': 'no courier with this id'}), 400
     ords = db_sess.query(Order).filter(Order.orders_courier == courier_id, Order.complete_time == '').all()
     if ords:
         # print('didnt all task')
@@ -357,8 +383,12 @@ def complete_orders():
     complete_t = req_json['complete_time']
     courier = db_sess.query(Courier).filter(Courier.id == courier_id).first()
     order = db_sess.query(Order).filter(Order.id == order_id).first()
-    if not courier or not order or order.orders_courier != courier.id:
-        abort(400)
+    if not courier:
+        return jsonify({'message': 'no courier with this id'}), 400
+    if not order:
+        return jsonify({'message': 'no order with this id'}), 400
+    if order.orders_courier != courier.id:
+        return jsonify({'message': 'courier and order don\'t match'}), 400
     db_sess.commit()
     reg = db_sess.query(Region).filter(
         Region.region == order.region, Region.courier_id == courier_id
