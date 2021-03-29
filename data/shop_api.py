@@ -1,4 +1,6 @@
 import datetime
+import re
+from pprint import pprint
 
 import flask, pydantic
 from flask import jsonify, abort, request, Blueprint
@@ -10,7 +12,7 @@ from data.regions import Region
 from data.workinghours import WH
 from data.deliveryhours import DH
 from typing import List, Optional
-
+import json
 from pydantic import validator
 
 blueprint = Blueprint(
@@ -24,6 +26,7 @@ c_type = {'foot': 10, 'bike': 15, 'car': 50}
 rev_c_type = {10: 'foot', 15: 'bike', 50: 'car'}
 kd = {10: 2, 15: 5, 50: 9}
 CODE = 'zhern0206eskiy'
+PATTERN = r = re.compile('.{2}:.{2}-.{2}:.{2}')
 
 
 # TODO Сделать дополнительные ответы для bad request'ов
@@ -39,6 +42,26 @@ class CourierModel(pydantic.BaseModel):
         if courier_type not in c_type:
             raise ValueError('courier_type should be "foot", "car" or "bike"')
         return courier_type
+
+    @validator('working_hours')
+    def wh_should_be(cls, working_hours: list):
+        for wh in working_hours:
+            if not PATTERN.match(wh):
+                raise ValueError('invalid working hours format')
+            if wh[2] != ':' or wh[5] != '-' or wh[8] != ':':
+                raise ValueError('invalid separators')
+            if not all(map(lambda x: x.isnumeric, [wh[0], wh[1], wh[3], wh[4], wh[6], wh[7], wh[9], wh[10]])):
+                raise ValueError('Hours/minutes should be integer')
+            else:
+                f1 = not 0 <= int(wh[0:2]) <= 23
+                f2 = not 0 <= int(wh[3:5]) <= 59
+                f3 = not 0 <= int(wh[6:8]) <= 23
+                f4 = not 0 <= int(wh[9:11]) <= 59
+                if f1 or f3:
+                    raise ValueError('Hours should be between 0 and 23')
+                if f2 or f4:
+                    raise ValueError('Minutes should be between 0 and 59')
+        return working_hours
 
     class Config:
         extra = 'forbid'
@@ -69,6 +92,27 @@ class OrderModel(pydantic.BaseModel):
         if not 0.01 <= w <= 50:
             raise ValueError('weight should be between 0.01 and 50')
         return w
+
+    @validator('delivery_hours')
+    def dh_should_be(cls, delivery_hours: list):
+        for dh in delivery_hours:
+            if not PATTERN.match(dh):
+                raise ValueError('invalid working hours format')
+            try:
+                map(int, [dh[0], dh[1], dh[3], dh[4], dh[6], dh[7], dh[9], dh[10]])
+            except ValueError:
+                raise ValueError('Hours/minutes should be integer')
+            if dh[2] != ':' or dh[5] != '-' or dh[8] != ':':
+                raise ValueError('invalid separators')
+            f1 = not 0 <= int(dh[0:2]) <= 23
+            f2 = not 0 <= int(dh[3:5]) <= 59
+            f3 = not 0 <= int(dh[6:8]) <= 23
+            f4 = not 0 <= int(dh[9:11]) <= 59
+            if f1 or f3:
+                raise ValueError('Hours should be between 0 and 23')
+            if f2 or f4:
+                raise ValueError('Minutes should be between 0 and 59')
+        return delivery_hours
 
 
 def is_t_ok(l1, l2) -> bool:
@@ -104,14 +148,19 @@ def add_couriers():
     is_ok = True
     for courier_info in req_json:
         flag = False
+        error_ans = []
         try:
             CourierModel(**courier_info, base=already_in_base)
         except pydantic.ValidationError as e:
-            print(e.json())
+            error_ans += json.loads(e.json())
             flag = True
+        if courier_info['courier_id'] in already_in_base:
+            error_ans += [
+                {"loc": ["id"], "msg": "Invalid id: There is a courier with the same id", "type": "value_error"}
+            ]
         if flag or courier_info['courier_id'] in already_in_base:
             is_ok = False
-            bad_id.append({"id": int(courier_info['courier_id'])})
+            bad_id.append({"id": int(courier_info['courier_id']), 'errors': error_ans})
         if not is_ok:
             continue
         courier = Courier()
@@ -133,6 +182,8 @@ def add_couriers():
     if is_ok:
         db_sess.commit()
         return jsonify({"couriers": res}), 201
+    pprint({"validation_error": bad_id})
+    print('-------------------------------------------------------------------------')
     return jsonify({"validation_error": bad_id}), 400
 
 
@@ -146,17 +197,19 @@ def add_orders():
     already_in_base = [i.id for i in db_sess.query(Order).all()]
     for order_info in req_json:
         flag = False
+        error_ans = []
         try:
             OrderModel(**order_info, base=already_in_base)
-            assert order_info['order_id'] not in already_in_base
         except pydantic.ValidationError as e:
-            print(e.json())
+            error_ans += json.loads(e.json())
             flag = True
-        except AssertionError as e:
-            print(e)
+        if order_info['order_id'] in already_in_base:
+            error_ans += [
+                {"loc": ["id"], "msg": "Invalid id: There is a order with the same id", "type": "value_error"}
+            ]
         if flag or order_info['order_id'] in already_in_base:
             is_ok = False
-            bad_id.append({"id": int(order_info['order_id'])})
+            bad_id.append({"id": int(order_info['order_id']), 'errors': error_ans})
         if not is_ok:
             continue
         order = Order()
@@ -175,6 +228,8 @@ def add_orders():
     if is_ok:
         db_sess.commit()
         return jsonify({"orders": res}), 201
+    pprint({"validation_error": bad_id})
+    print('-------------------------------------------------------------------------')
     return jsonify({"validation_error": bad_id}), 400
 
 

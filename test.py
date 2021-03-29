@@ -153,7 +153,22 @@ def test_post_couriers_repeating_id():
             }
         ]
     })  # повторение айдишников (ошибка)
-    assert res.status_code == 400 and res.json() == {'validation_error': [{'id': 1}, {'id': 2}, {'id': 3}]}
+    assert res.status_code == 400 and res.json() == \
+           {'validation_error': [{'errors': [{'loc': ['id'],
+                                              'msg': 'Invalid id: There is a courier with '
+                                                     'the same id',
+                                              'type': 'value_error'}],
+                                  'id': 1},
+                                 {'errors': [{'loc': ['id'],
+                                              'msg': 'Invalid id: There is a courier with '
+                                                     'the same id',
+                                              'type': 'value_error'}],
+                                  'id': 2},
+                                 {'errors': [{'loc': ['id'],
+                                              'msg': 'Invalid id: There is a courier with '
+                                                     'the same id',
+                                              'type': 'value_error'}],
+                                  'id': 3}]}
     # {'validation_error': [{'id': 1}, {'id': 2}, {'id': 3}]}
 
 
@@ -181,7 +196,11 @@ def test_post_couriers_wrong_field():
             }
         ]
     })  # несуществующее поле (ошибка)
-    assert res.status_code == 400 and res.json() == {'validation_error': [{'id': 9}]}
+    assert res.status_code == 400 and res.json() == \
+           {'validation_error': [{'errors': [{'loc': ['foo'],
+                                              'msg': 'extra fields not permitted',
+                                              'type': 'value_error.extra'}],
+                                  'id': 9}]}
     # {'validation_error': [{'id': 9}]}
 
 
@@ -208,8 +227,49 @@ def test_post_couriers_wrong_value():
             }
         ]
     })  # несуществующее поле (ошибка)
-    assert res.status_code == 400 and res.json() == {'validation_error': [{'id': 9}]}
+    assert res.status_code == 400 and res.json() == \
+           {'validation_error': [{'errors': [{'loc': ['regions', 1],
+                                              'msg': 'value is not a valid integer',
+                                              'type': 'type_error.integer'}],
+                                  'id': 9}]}
     # {'validation_error': [{'id': 9}]}
+
+
+def test_post_couriers_wrong_wh_format():
+    res = add_couriers({
+        "data": [
+            {
+                "courier_id": 43,
+                "courier_type": "car",
+                "regions": [12, 22, 23, 33],
+                "working_hours": ['uyfyjcyjtc'],
+            }
+        ]
+    })  # неверный формат рабочих часов
+    assert res.status_code == 400 and res.json() == \
+           {'validation_error': [{'errors': [{'loc': ['working_hours'],
+                                              'msg': 'invalid working hours format',
+                                              'type': 'value_error'}],
+                                  'id': 43}]}
+
+
+def test_post_couriers_wrong_wh_numbers():
+    res = add_couriers({
+        "data": [
+            {
+                "courier_id": 43,
+                "courier_type": "car",
+                "regions": [12, 22, 23, 33],
+                "working_hours": ['16:0h-1g:01'],
+            }
+        ]
+    })  # неверный формат рабочих часов
+    assert res.status_code == 400 and res.json() == \
+           {'validation_error': [{'errors': [{'loc': ['working_hours'],
+                                              'msg': 'invalid literal for int() with base '
+                                                     "10: '0h'",
+                                              'type': 'value_error'}],
+                                  'id': 43}]}
 
 
 def test_patch_couriers_all_params():
@@ -241,7 +301,7 @@ def test_patch_couriers_wrong_params():
 def test_patch_couriers_wrong_id():
     res = edit_courier(10, {
         'regions': [1, 2, 3]
-    })  # изменение несуществующего параметра (ошибка)
+    })  # изменение несуществующего курьера (ошибка)
     assert res.status_code == 404
 
 
@@ -294,10 +354,15 @@ def test_post_orders_repeating_id():
             }
         ]
     })  # повторение айди (ошибка)
-    assert res.status_code == 400 and res.json() == {'validation_error': [{'id': 3}]}
+    assert res.status_code == 400 and res.json() == \
+           {'validation_error': [{'errors': [{'loc': ['id'],
+                                              'msg': 'Invalid id: There is a order with '
+                                                     'the same id',
+                                              'type': 'value_error'}],
+                                  'id': 3}]}
 
 
-def test_post_orders_missing_field():
+def test_post_orders_odd_field():
     res = add_orders({
         "data": [
             {
@@ -321,7 +386,25 @@ def test_post_orders_missing_field():
             }
         ]
     })  # несуществующее поле (ошибка)
-    assert res.status_code == 400 and res.json() == {'validation_error': [{'id': 1}, {'id': 2}, {'id': 3}]}
+    assert res.status_code == 400 and res.json() == \
+           {'validation_error': [{'errors': [{'loc': ['fjhfbgudrgbdiu'],
+                                              'msg': 'extra fields not permitted',
+                                              'type': 'value_error.extra'},
+                                             {'loc': ['id'],
+                                              'msg': 'Invalid id: There is a order with '
+                                                     'the same id',
+                                              'type': 'value_error'}],
+                                  'id': 1},
+                                 {'errors': [{'loc': ['id'],
+                                              'msg': 'Invalid id: There is a order with '
+                                                     'the same id',
+                                              'type': 'value_error'}],
+                                  'id': 2},
+                                 {'errors': [{'loc': ['id'],
+                                              'msg': 'Invalid id: There is a order with '
+                                                     'the same id',
+                                              'type': 'value_error'}],
+                                  'id': 3}]}
 
 
 def test_post_orders_too_big_weight():
@@ -347,7 +430,12 @@ def test_post_orders_too_big_weight():
             }
         ]
     })  # слишком большой вес (ошибка)
-    assert res.status_code == 400 and res.json() == {'validation_error': [{'id': 10}]}
+    assert res.status_code == 400 and res.json() == \
+           {'validation_error': [{'errors': [{'loc': ['weight'],
+                                              'msg': 'weight should be between 0.01 and '
+                                                     '50',
+                                              'type': 'value_error'}],
+                                  'id': 10}]}
 
 
 def test_post_orders_too_small_weight():
@@ -373,7 +461,11 @@ def test_post_orders_too_small_weight():
             }
         ]
     })  # слишком маленький вес (ошибка)
-    assert res.status_code == 400 and res.json() == {'validation_error': [{'id': 10}]}
+    assert res.status_code == 400 and res.json() == {'validation_error': [{'errors': [{'loc': ['weight'],
+                                                                                       'msg': 'weight should be between 0.01 and '
+                                                                                              '50',
+                                                                                       'type': 'value_error'}],
+                                                                           'id': 10}]}
 
 
 def test_assign_orders_courier_with_some_orders():
