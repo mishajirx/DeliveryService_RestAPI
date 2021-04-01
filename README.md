@@ -14,27 +14,27 @@
 $ pip install -r requirements.txt
 ## Запуск приложения ##
 Для запуска приложения нужно просто выполнить в консоли
-sudo python3 main.py (или sudo python main.py)
+python3 main.py (или sudo python main.py)
 #### Пример #### 
-$ sudo python3 main.py
+$ python3 main.py
 
 ## Запуск Тестов ##
 Для запуска тестов нужно:
 1. Повторить пункты из раздела "Запуск приложения"
 2. Нажать ctrl+z. Выполнить bg
-3. выполнить test.py -x -s
+3. выполнить pytest-3 test.py -x -s
 4. ввести 'y'
 #### Пример: ####
 $ sudo python3 main.py
 $ ^Z
 & bg
-$ sudo pytest test.py -x -s
+$ pytest-3 test.py -x -s
 
 ## Автозапуск ##
 Чтобы сделать так, чтобы сервер запускался при старте 
-системы нужно зайтив консоль и ввести следующие команды:
+системы нужно зайти в консоль и ввести следующие команды:
 1. crontab -e
 2. В открывшемся файле в последней строке набрать:
-   @reboot sudo python3 /path_to_the_project/main.py
+   @reboot python3 /path_to_the_project/main.py
 
 
