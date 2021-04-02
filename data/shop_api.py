@@ -383,8 +383,10 @@ def assign_orders():
     if not res:
         return jsonify({"orders": []}), 200
     courier.last_pack_cost = kd[courier.maxw] * 500
-    courier.last_assign_time = str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
-    assign_time = str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
+    # t = str(datetime.datetime.utcnow()).replace(' ', 'T') + 'Z'
+    t = str(datetime.datetime.utcnow().isoformat()) + 'Z'
+    courier.last_assign_time = t
+    assign_time = t
     if '' == courier.last_delivery_t:
         courier.last_delivery_t = assign_time
     db_sess.commit()
