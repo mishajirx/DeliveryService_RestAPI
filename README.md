@@ -1,40 +1,38 @@
-# "Сласти от всех напастей" REST API Сервис #
-## Перенос папки с репозиторием к себе на компьютер ##
-1. Нажмите кнопку fork в репозитории https://github.com/mishajirx/YandexBackend
-2. Перейдите в командную строку
-3. Перейдите подходящую вам папку
-4. вбейте команду git clone  https://github.com/<YourName>/YandexBackend
+# "Sweetness from All Troubles" REST API Service #
+## Transferring the Repository Folder to Your Computer ##
+1. Click the fork button in the repository https://github.com/mishajirx/YandexBackend
+2. Open the command line
+3. Navigate to the folder of your choice
+4. Enter the command git clone https://github.com/<YourName>/YandexBackend
 
-## Установка нужного обеспечения ##
-#### Для скачивания необходимых библиотек нужно: ####
-0. Все действие ниже указанные выполнять в терминале
-1. Перейти в командной строке в каталог с проектом
-2. выполнить pip install -r requirements.txt
-#### Пример ####
+## Installing Required Software ##
+#### To download the necessary libraries, follow these steps: ####
+0. Perform all actions listed below in the terminal
+1. Navigate to the project directory in the command line
+2. Execute pip install -r requirements.txt
+#### Example ####
 $ pip install -r requirements.txt
-## Запуск приложения ##
-Для запуска приложения нужно просто выполнить в консоли
-python3 main.py (или sudo python main.py)
-#### Пример #### 
+
+## Running the Application ##
+To run the application, simply execute in the console
+python3 main.py (or sudo python main.py)
+#### Example #### 
 $ python3 main.py
 
-## Запуск Тестов ##
-Для запуска тестов нужно:
-1. Повторить пункты из раздела "Запуск приложения"
-2. Нажать ctrl+z. Выполнить bg
-3. выполнить pytest-3 test.py -x -s
-4. ввести 'y'
-#### Пример: ####
+## Running Tests ##
+To run tests, you need to:
+1. Repeat the steps from the "Running the Application" section
+2. Press ctrl+z. Execute bg
+3. Execute pytest-3 test.py -x -s
+4. Enter 'y'
+#### Example: ####
 $ sudo python3 main.py
 $ ^Z
 & bg
 $ pytest-3 test.py -x -s
 
-## Автозапуск ##
-Чтобы сделать так, чтобы сервер запускался при старте 
-системы нужно зайти в консоль и ввести следующие команды:
+## Auto Start ##
+To make the server start on system boot, enter the following commands in the console:
 1. crontab -e
-2. В открывшемся файле в последней строке набрать:
+2. In the opened file, type the following in the last line:
    @reboot python3 /path_to_the_project/main.py
-
-
