@@ -1,4 +1,12 @@
 # "Sweetness from All Troubles" REST API Service #
+
+Service performs the REST API access to the delivery service app, including
+1. Distribution of orders
+3. Changing the order statuses
+2. Assigning roles of the users 
+
+Moreover, every component workability was checked by the unit tests, contained in the project
+
 ## Transferring the Repository Folder to Your Computer ##
 1. Click the fork button in the repository https://github.com/mishajirx/YandexBackend
 2. Open the command line
